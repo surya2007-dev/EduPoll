@@ -1,0 +1,146 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Navigation Shared Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <!-- Main Content Canvas -->
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px] min-h-screen">
+        <div class="max-w-[1440px] mx-auto w-full space-y-xl animate-fade-in">
+            <!-- Header Section -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="font-headline-lg text-headline-lg text-on-surface">Reports</h3>
+                    <p class="text-on-surface-variant font-body-md"><%= polls.length %> total polls tracked</p>
+                </div>
+                
+                <!-- Export Trigger button with loader overlay -->
+                <button onclick="triggerCSVExport()" class="px-5 py-2.5 bg-primary text-white rounded-xl font-bold flex items-center gap-2 shadow-md hover:shadow-lg active:scale-95 transition-all hover:scale-105" id="btn-export">
+                    <span class="material-symbols-outlined text-sm" id="exportIcon">download</span>
+                    <span id="exportText">Export Report</span>
+                </button>
+            </div>
+
+            <!-- Metrics Bento Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-gutter">
+                <!-- Avg Participation -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 flex flex-col justify-between shadow-sm hover-scale">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-2xl">trending_up</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Avg. Participation</p>
+                        <h4 class="font-display-lg text-display-lg text-on-surface"><%= avgParticipation %>%</h4>
+                    </div>
+                </div>
+
+                <!-- Active Polls -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 flex flex-col justify-between shadow-sm hover-scale">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center text-secondary">
+                            <span class="material-symbols-outlined text-2xl">sensors</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Active Polls</p>
+                        <h4 class="font-display-lg text-display-lg text-on-surface"><%= activePollsCount %></h4>
+                    </div>
+                </div>
+
+                <!-- Total Responses -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 flex flex-col justify-between shadow-sm hover-scale">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+                            <span class="material-symbols-outlined text-2xl">verified</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Total Responses</p>
+                        <h4 class="font-display-lg text-display-lg text-on-surface"><%= totalResponsesCount %></h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracked History Table -->
+            <div class="bg-white border border-outline-variant/30 rounded-2xl overflow-hidden flex flex-col shadow-sm">
+                <div class="p-6 border-b border-outline-variant/30 bg-surface-container-low/50">
+                    <h5 class="text-lg font-bold text-on-surface">Tracked Polls History</h5>
+                    <p class="text-on-surface-variant text-sm">Classroom interactions and response tracking log</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-surface-container-high/30">
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Poll Question</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Classroom</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Status</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Responses</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Not Answered</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                            <% if (polls.length === 0) { %>
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-on-surface-variant italic">No tracked polls found</td>
+                                </tr>
+                            <% } else { %>
+                                <% polls.forEach(poll => { %>
+                                    <%
+                                      let responsesCount = poll.responses.length;
+                                      let targetCount = poll.targetStudents.length;
+                                      let pendingCount = Math.max(0, targetCount - responsesCount);
+                                    %>
+                                    <tr class="hover:bg-primary-container/5 transition-colors">
+                                        <td class="px-6 py-4 font-semibold text-on-surface text-sm"><%= poll.question %></td>
+                                        <td class="px-6 py-4 font-code text-xs text-on-surface-variant"><%= poll.classroom.name %></td>
+                                        <td class="px-6 py-4">
+                                            <% if (poll.status === 'live') { %>
+                                                <span class="px-2 py-0.5 rounded bg-error-container text-on-error-container text-[10px] font-bold font-mono">LIVE</span>
+                                            <% } else { %>
+                                                <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-bold font-mono">COMPLETED</span>
+                                            <% } %>
+                                        </td>
+                                        <td class="px-6 py-4 font-code text-xs font-semibold"><%= responsesCount %> / <%= targetCount %></td>
+                                        <td class="px-6 py-4 font-code text-xs text-error font-bold"><%= pendingCount %></td>
+                                        <td class="px-6 py-4 text-on-surface-variant font-code text-xs">
+                                            <%= new Date(poll.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) %> at <%= new Date(poll.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function triggerCSVExport() {
+            const btn = document.getElementById('btn-export');
+            const icon = document.getElementById('exportIcon');
+            const text = document.getElementById('exportText');
+
+            // Apply loading visual states
+            btn.disabled = true;
+            icon.innerText = "sync";
+            icon.className = "material-symbols-outlined text-sm animate-spin";
+            text.innerText = "Exporting...";
+
+            setTimeout(() => {
+                // Trigger actual download endpoint
+                window.open('/api/reports/export', '_blank');
+                
+                // Restore button states
+                btn.disabled = false;
+                icon.innerText = "download";
+                icon.className = "material-symbols-outlined text-sm";
+                text.innerText = "Export Report";
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

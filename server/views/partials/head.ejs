@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        try {
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        "colors": {
+                            "surface": "#f8f9fd",
+                            "on-secondary-fixed-variant": "#454748",
+                            "on-secondary-fixed": "#191c1d",
+                            "tertiary": "#5d5d61",
+                            "on-primary-fixed": "#001a41",
+                            "primary-container": "#1a73e8",
+                            "inverse-primary": "#adc7ff",
+                            "primary-fixed-dim": "#adc7ff",
+                            "on-tertiary-fixed-variant": "#46474a",
+                            "surface-bright": "#f8f9fd",
+                            "on-tertiary-fixed": "#1a1b1e",
+                            "background": "#f8f9fd",
+                            "primary-fixed": "#d8e2ff",
+                            "secondary": "#5c5f60",
+                            "outline": "#727785",
+                            "secondary-container": "#e1e3e4",
+                            "on-primary": "#ffffff",
+                            "surface-container-low": "#f2f4f8",
+                            "on-secondary": "#ffffff",
+                            "on-error-container": "#93000a",
+                            "on-primary-container": "#ffffff",
+                            "error": "#ba1a1a",
+                            "surface-tint": "#005bc0",
+                            "secondary-fixed-dim": "#c5c7c8",
+                            "primary": "#005bbf",
+                            "surface-variant": "#e1e2e6",
+                            "on-surface": "#191c1f",
+                            "inverse-on-surface": "#eff1f5",
+                            "surface-container": "#eceef2",
+                            "error-container": "#ffdad6",
+                            "tertiary-container": "#76767a",
+                            "surface-container-highest": "#e1e2e6",
+                            "secondary-fixed": "#e1e3e4",
+                            "on-secondary-container": "#626566",
+                            "on-tertiary": "#ffffff",
+                            "on-surface-variant": "#414754",
+                            "surface-dim": "#d8dade",
+                            "surface-container-high": "#e6e8ec",
+                            "on-error": "#ffffff",
+                            "tertiary-fixed-dim": "#c7c6ca",
+                            "on-tertiary-container": "#ffffff",
+                            "inverse-surface": "#2d3134",
+                            "surface-container-lowest": "#ffffff",
+                            "tertiary-fixed": "#e3e2e6",
+                            "outline-variant": "#c1c6d6",
+                            "on-background": "#191c1f",
+                            "on-primary-fixed-variant": "#004493"
+                        },
+                        "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                        },
+                        "spacing": {
+                            "md": "16px",
+                            "margin-desktop": "32px",
+                            "lg": "24px",
+                            "base": "4px",
+                            "2xl": "48px",
+                            "xs": "4px",
+                            "margin-mobile": "16px",
+                            "3xl": "64px",
+                            "sm": "8px",
+                            "gutter": "16px",
+                            "xl": "32px"
+                        },
+                        "fontFamily": {
+                            "title-lg": ["Inter"],
+                            "label-md": ["Inter"],
+                            "headline-lg": ["Inter"],
+                            "code": ["Inter"],
+                            "display-lg": ["Inter"],
+                            "body-md": ["Inter"],
+                            "headline-md": ["Inter"],
+                            "headline-lg-mobile": ["Inter"],
+                            "body-lg": ["Inter"]
+                        },
+                        "fontSize": {
+                            "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                            "code": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                        }
+                    },
+                },
+            }
+        } catch (_e) {}
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fd;
+            color: #191c1f;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f2f4f8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c6d6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8b0c6;
+        }
+        /* Hover micro-animations */
+        .hover-scale {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+        .hover-scale:active {
+            transform: translateY(0) scale(0.99);
+        }
+        /* Settings/Notifications overlay transition */
+        .slide-over {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>

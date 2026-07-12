@@ -1,0 +1,327 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Navigation Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <!-- Main Canvas Content -->
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px] min-h-screen flex items-center justify-center">
+        <!-- Form Composer Card -->
+        <section class="w-full max-w-2xl bg-white border border-outline-variant/30 rounded-2xl shadow-xl overflow-hidden p-0 hover-scale">
+            <!-- Card Header -->
+            <div class="px-8 py-5 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low/50">
+                <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">poll</span> Create New Poll / Activity
+                </h3>
+                <a href="/faculty/polls" class="text-on-surface-variant hover:text-on-surface transition-all">
+                    <span class="material-symbols-outlined">close</span>
+                </a>
+            </div>
+
+            <!-- Form -->
+            <form class="p-8 space-y-6" id="createPollForm" onsubmit="submitPollForm(event)">
+                <!-- Type Selection -->
+                <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="radio" name="item_type" value="poll" checked class="w-5 h-5 rounded-full border-outline text-primary focus:ring-primary" onclick="toggleType('poll')">
+                        <span class="text-sm font-semibold text-on-surface" id="label-poll">Poll (Multiple Choice)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="radio" name="item_type" value="activity" class="w-5 h-5 rounded-full border-outline text-primary focus:ring-primary" onclick="toggleType('activity')">
+                        <span class="text-sm font-medium text-on-surface-variant group-hover:text-on-surface" id="label-activity">Activity (To Do)</span>
+                    </label>
+                </div>
+
+                <!-- Select Classroom -->
+                <div class="space-y-1">
+                    <label class="font-label-md text-label-md text-on-surface-variant font-bold tracking-wide uppercase">Select Classroom *</label>
+                    <select id="pollClassroom" required onchange="loadStudentsForClassroom()" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-md bg-white">
+                        <option value="">-- Choose Classroom --</option>
+                        <% classrooms.forEach(room => { %>
+                            <option value="<%= room._id %>"><%= room.name %> (<%= room.subject %>)</option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <!-- Poll Question -->
+                <div class="space-y-1">
+                    <label id="questionLabel" class="font-label-md text-label-md text-on-surface-variant font-bold tracking-wide uppercase">Poll Question *</label>
+                    <input type="text" id="pollQuestion" required placeholder="e.g. Have you completed today's homework?" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-md placeholder:text-outline-variant">
+                </div>
+
+                <!-- Target Group Toggle -->
+                <div class="space-y-3">
+                    <label class="font-label-md text-label-md text-on-surface-variant font-bold tracking-wide uppercase">Poll Target Group *</label>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border border-outline-variant hover:border-primary/40 has-[:checked]:border-primary has-[:checked]:bg-primary/5 transition-all">
+                            <input type="radio" name="target_group" value="all" checked onclick="switchTargetGroup('all')" class="w-4 h-4 text-primary focus:ring-primary">
+                            <div>
+                                <span class="text-sm font-semibold text-on-surface">All Students</span>
+                                <p class="text-[10px] text-on-surface-variant">From selected classroom</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border border-outline-variant hover:border-tertiary/40 has-[:checked]:border-tertiary has-[:checked]:bg-tertiary/5 transition-all">
+                            <input type="radio" name="target_group" value="mentees_only" onclick="switchTargetGroup('mentees_only')" class="w-4 h-4 text-tertiary focus:ring-tertiary">
+                            <div>
+                                <span class="text-sm font-semibold text-on-surface">My Mentees Only</span>
+                                <p class="text-[10px] text-on-surface-variant">Auto-targets your mentee group</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border border-outline-variant hover:border-primary/40 has-[:checked]:border-primary has-[:checked]:bg-primary/5 transition-all">
+                            <input type="radio" name="target_group" value="custom" onclick="switchTargetGroup('custom')" class="w-4 h-4 text-primary focus:ring-primary">
+                            <div>
+                                <span class="text-sm font-semibold text-on-surface">Custom</span>
+                                <p class="text-[10px] text-on-surface-variant">Pick students manually</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Custom Students Checklist (only when 'custom' group is selected) -->
+                <div class="space-y-1 hidden" id="customStudentsSection">
+                    <div class="flex justify-between items-center">
+                        <label class="font-label-md text-label-md text-on-surface-variant font-bold tracking-wide uppercase">Select Students</label>
+                        <div class="flex items-center gap-2 text-xs font-semibold hidden" id="selectionControls">
+                            <button type="button" onclick="setAllCheckboxes(true)" class="text-primary hover:underline">Select All</button>
+                            <span class="text-outline-variant">|</span>
+                            <button type="button" onclick="setAllCheckboxes(false)" class="text-error hover:underline">Clear All</button>
+                        </div>
+                    </div>
+                    <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 max-h-48 overflow-y-auto">
+                        <div class="space-y-2" id="studentsContainer">
+                            <p class="text-xs text-on-surface-variant italic">Select a classroom first to populate student checklist.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mentees Selected Indicator -->
+                <div class="hidden p-3 bg-tertiary/5 border border-tertiary/20 rounded-xl" id="menteesIndicator">
+                    <p class="text-sm font-semibold text-tertiary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">group</span>
+                        This poll will be sent to your mentee group only. No manual selection needed.
+                    </p>
+                </div>
+
+                <!-- Dynamic Options Panel -->
+                <div class="space-y-3" id="optionsOuterContainer">
+                    <label class="font-label-md text-label-md text-on-surface-variant font-bold tracking-wide uppercase">Option Choices (Min 2)</label>
+                    
+                    <div class="space-y-2" id="optionsContainer">
+                        <div class="flex items-center gap-2 option-row">
+                            <span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-[10px] shrink-0">1</span>
+                            <input type="text" value="Done" required class="flex-1 px-4 py-2.5 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-md" placeholder="Add option...">
+                            <button type="button" onclick="removeOption(this)" class="p-2 text-error hover:bg-error/10 rounded-lg transition-all">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2 option-row">
+                            <span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-[10px] shrink-0">2</span>
+                            <input type="text" placeholder="Add option..." required class="flex-1 px-4 py-2.5 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-md">
+                            <button type="button" onclick="removeOption(this)" class="p-2 text-error hover:bg-error/10 rounded-lg transition-all">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="addOptionRow()" class="inline-flex items-center gap-1.5 text-primary hover:text-primary-container font-semibold text-xs transition-all mt-2 focus:outline-none">
+                        <span class="material-symbols-outlined text-sm">add</span> Add Custom Option Choice
+                    </button>
+                </div>
+
+                <!-- Error Alert Banner -->
+                <div id="errorBanner" class="hidden text-error bg-error-container/30 border border-error/20 p-3 rounded-xl text-sm text-center font-medium"></div>
+
+                <!-- Form Actions footer -->
+                <div class="flex justify-end items-center gap-3 pt-6 border-t border-outline-variant/20">
+                    <a href="/faculty/polls" class="px-5 py-2.5 border border-outline-variant text-on-surface-variant font-semibold rounded-xl hover:bg-surface-container transition-all">Cancel</a>
+                    <button type="submit" class="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-md">Launch Poll</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        function switchTargetGroup(group) {
+            const customSection = document.getElementById('customStudentsSection');
+            const menteesIndicator = document.getElementById('menteesIndicator');
+            const classroomSection = document.getElementById('pollClassroom').closest('.space-y-1');
+
+            if (group === 'custom') {
+                customSection.classList.remove('hidden');
+                menteesIndicator.classList.add('hidden');
+            } else if (group === 'mentees_only') {
+                customSection.classList.add('hidden');
+                menteesIndicator.classList.remove('hidden');
+            } else {
+                // 'all'
+                customSection.classList.add('hidden');
+                menteesIndicator.classList.add('hidden');
+            }
+        }
+
+        function toggleType(type) {
+            const labelPoll = document.getElementById('label-poll');
+            const labelActivity = document.getElementById('label-activity');
+            const questionLabel = document.getElementById('questionLabel');
+            const pollQuestionInput = document.getElementById('pollQuestion');
+            const optionsContainer = document.getElementById('optionsOuterContainer');
+
+            if (type === 'poll') {
+                labelPoll.classList.add('text-on-surface', 'font-bold');
+                labelPoll.classList.remove('text-on-surface-variant');
+                labelActivity.classList.remove('text-on-surface', 'font-bold');
+                labelActivity.classList.add('text-on-surface-variant');
+
+                questionLabel.innerText = "Poll Question *";
+                pollQuestionInput.placeholder = "e.g. Have you completed today's homework?";
+                optionsContainer.style.display = '';
+            } else {
+                labelActivity.classList.add('text-on-surface', 'font-bold');
+                labelActivity.classList.remove('text-on-surface-variant');
+                labelPoll.classList.remove('text-on-surface', 'font-bold');
+                labelPoll.classList.add('text-on-surface-variant');
+
+                questionLabel.innerText = "Activity Description / Question *";
+                pollQuestionInput.placeholder = "e.g. Finish programming assignment 3";
+                // Optionally hide options check in activities if simple checkbox is preferred,
+                // but keeping options visible is fine for customizable to-dos.
+            }
+        }
+
+        async function loadStudentsForClassroom() {
+            const classId = document.getElementById('pollClassroom').value;
+            const container = document.getElementById('studentsContainer');
+            const selectControls = document.getElementById('selectionControls');
+
+            if (!classId) {
+                container.innerHTML = '<p class="text-xs text-on-surface-variant italic">Select a classroom first to populate student checklist.</p>';
+                selectControls.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = '<p class="text-xs text-on-surface-variant italic animate-pulse">Loading students...</p>';
+            try {
+                const res = await fetch(`/api/classrooms/${classId}/students`);
+                if (res.ok) {
+                    const students = await res.json();
+                    if (students.length === 0) {
+                        container.innerHTML = '<p class="text-xs text-error italic">No students enrolled in this classroom.</p>';
+                        selectControls.style.display = 'none';
+                        return;
+                    }
+                    
+                    selectControls.style.display = '';
+                    container.innerHTML = students.map(student => `
+                        <label class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer border border-transparent hover:border-outline-variant/10">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" name="target_student" value="${student._id}" checked class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary">
+                                <span class="text-xs font-semibold text-on-surface">&nbsp;${student.name}</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-outline font-medium">${student.secId}</span>
+                        </label>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-xs text-error italic">Failed to load students.</p>';
+                }
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = '<p class="text-xs text-error italic">Connection error loading student list.</p>';
+            }
+        }
+
+        function setAllCheckboxes(checked) {
+            const checkboxes = document.querySelectorAll('input[name="target_student"]');
+            checkboxes.forEach(cb => cb.checked = checked);
+        }
+
+        function addOptionRow() {
+            const container = document.getElementById('optionsContainer');
+            const rows = container.querySelectorAll('.option-row');
+            
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 option-row mt-2';
+            div.innerHTML = `
+                <span class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center font-bold text-[10px] shrink-0">${rows.length + 1}</span>
+                <input type="text" placeholder="Add option..." required class="flex-1 px-4 py-2.5 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-md">
+                <button type="button" onclick="removeOption(this)" class="p-2 text-error hover:bg-error/10 rounded-lg transition-all">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+            `;
+            container.appendChild(div);
+            reindexOptions();
+        }
+
+        function removeOption(btn) {
+            const container = document.getElementById('optionsContainer');
+            const rows = container.querySelectorAll('.option-row');
+            if (rows.length <= 2) {
+                alert('A poll must contain at least 2 options.');
+                return;
+            }
+            btn.closest('.option-row').remove();
+            reindexOptions();
+        }
+
+        function reindexOptions() {
+            const container = document.getElementById('optionsContainer');
+            const rows = container.querySelectorAll('.option-row');
+            rows.forEach((row, idx) => {
+                row.querySelector('span').innerText = idx + 1;
+            });
+        }
+
+        async function submitPollForm(e) {
+            e.preventDefault();
+            const type = document.querySelector('input[name="item_type"]:checked').value;
+            const classroom = document.getElementById('pollClassroom').value;
+            const question = document.getElementById('pollQuestion').value.trim();
+            const targetGroup = document.querySelector('input[name="target_group"]:checked').value;
+            
+            // Options array
+            const optionInputs = document.querySelectorAll('.option-row input');
+            const options = Array.from(optionInputs).map(inp => inp.value.trim()).filter(val => val.length > 0);
+
+            if (options.length < 2) {
+                alert('Please provide at least 2 options.');
+                return;
+            }
+
+            // Target students — only needed for 'custom' group
+            let targetStudents = [];
+            if (targetGroup === 'custom') {
+                const checkboxes = document.querySelectorAll('input[name="target_student"]:checked');
+                targetStudents = Array.from(checkboxes).map(cb => cb.value);
+            }
+
+            if (!classroom && targetGroup !== 'mentees_only') {
+                alert('Please select a classroom.');
+                return;
+            }
+
+            const errorBanner = document.getElementById('errorBanner');
+            errorBanner.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/polls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, classroom, question, options, targetStudents, targetGroup })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/faculty/polls';
+                } else {
+                    const data = await response.json();
+                    errorBanner.innerText = data.error || 'Failed to launch poll';
+                    errorBanner.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                errorBanner.innerText = 'Failed to connect to the server';
+                errorBanner.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

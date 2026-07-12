@@ -1,0 +1,278 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px] min-h-screen">
+        <div class="max-w-[1440px] mx-auto w-full space-y-xl animate-fade-in">
+
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="font-headline-lg text-headline-lg text-on-surface flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center">
+                            <span class="material-symbols-outlined">group</span>
+                        </span>
+                        My Mentee Community
+                    </h3>
+                    <p class="text-on-surface-variant font-body-md mt-1">Students under your mentorship — their growth is your mission.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="/messages" onclick="setTimeout(()=>{ window.location.href='/messages'; }, 50)" class="flex items-center gap-2 px-5 py-2.5 bg-tertiary text-white rounded-xl font-bold shadow-md hover:brightness-110 active:scale-95 transition-all hover:scale-105">
+                        <span class="material-symbols-outlined text-sm">chat</span> Message Mentees
+                    </a>
+                    <a href="/faculty/students" class="flex items-center gap-2 px-5 py-2.5 border border-outline-variant text-on-surface-variant rounded-xl font-semibold hover:bg-surface-container transition-all">
+                        <span class="material-symbols-outlined text-sm">manage_accounts</span> Manage Students
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Strip (2 boxes) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white border border-outline-variant/30 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center">
+                        <span class="material-symbols-outlined">group</span>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-on-surface" id="visibleCount"><%= mentees.length %></p>
+                        <p class="text-xs text-on-surface-variant font-semibold">Total Mentees</p>
+                    </div>
+                </div>
+                <div class="bg-white border border-outline-variant/30 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined">forum</span>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-on-surface"><%= menteeMessages.length %></p>
+                        <p class="text-xs text-on-surface-variant font-semibold">Group Messages</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <% if (mentees.length > 0) { %>
+            <div class="bg-white border border-outline-variant/30 rounded-2xl p-4 shadow-sm flex flex-wrap items-end gap-4">
+                <div class="flex items-center gap-2 shrink-0">
+                    <span class="material-symbols-outlined text-on-surface-variant text-sm">filter_list</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Filter Mentees</span>
+                </div>
+
+                <!-- Department filter -->
+                <div class="flex flex-col gap-1 min-w-[160px]">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Department</label>
+                    <select id="filterDept" onchange="filterMentees()" class="px-3 py-2 rounded-xl border border-outline-variant/50 bg-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                        <option value="">All Departments</option>
+                        <% [...new Set(mentees.map(m => m.department).filter(Boolean))].sort().forEach(dept => { %>
+                        <option value="<%= dept %>"><%= dept %></option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <!-- Year filter -->
+                <div class="flex flex-col gap-1 min-w-[140px]">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Year</label>
+                    <select id="filterClass" onchange="filterMentees()" class="px-3 py-2 rounded-xl border border-outline-variant/50 bg-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                        <option value="">All Years</option>
+                        <option value="year 1">Year 1</option>
+                        <option value="year 2">Year 2</option>
+                        <option value="year 3">Year 3</option>
+                        <option value="year 4">Year 4</option>
+                    </select>
+                </div>
+
+                <!-- Section filter -->
+                <div class="flex flex-col gap-1 min-w-[120px]">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Section</label>
+                    <select id="filterSection" onchange="filterMentees()" class="px-3 py-2 rounded-xl border border-outline-variant/50 bg-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                        <option value="">All Sections</option>
+                        <option value="a">Section A</option>
+                        <option value="b">Section B</option>
+                        <option value="c">Section C</option>
+                        <option value="d">Section D</option>
+                        <option value="e">Section E</option>
+                        <option value="f">Section F</option>
+                        <option value="g">Section G</option>
+                        <option value="h">Section H</option>
+                    </select>
+                </div>
+
+                <!-- Active filter count + Clear -->
+                <div class="flex items-center gap-2 ml-auto">
+                    <span id="filterBadge" class="hidden px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full border border-primary/20"></span>
+                    <button onclick="clearFilters()" id="clearBtn" class="hidden px-3 py-2 border border-outline-variant text-on-surface-variant text-xs font-bold rounded-xl hover:bg-surface-container transition-all flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">close</span> Clear
+                    </button>
+                </div>
+            </div>
+            <% } %>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Mentee Cards Grid -->
+                <div class="lg:col-span-2">
+                    <h4 class="font-bold text-on-surface mb-4 text-base flex items-center gap-2">
+                        <span class="material-symbols-outlined text-tertiary text-lg">badge</span> Mentee Roster
+                    </h4>
+                    <% if (mentees.length === 0) { %>
+                    <div class="bg-white border border-outline-variant/30 rounded-2xl p-12 shadow-sm text-center">
+                        <span class="material-symbols-outlined text-[56px] text-outline-variant/50">group_off</span>
+                        <h5 class="mt-3 font-bold text-on-surface">No Mentees Yet</h5>
+                        <p class="text-sm text-on-surface-variant mt-1 mb-4">Go to the Students page and click "Add Mentee" on any student to begin.</p>
+                        <a href="/faculty/students" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-semibold text-sm shadow">
+                            <span class="material-symbols-outlined text-sm">person_add</span> Go to Students
+                        </a>
+                    </div>
+                    <% } else { %>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="menteeGrid">
+                        <!-- No-results placeholder (hidden by default) -->
+                        <div id="noFilterResults" class="hidden col-span-2 bg-white border border-outline-variant/30 rounded-2xl p-10 shadow-sm text-center">
+                            <span class="material-symbols-outlined text-[48px] text-outline-variant/40">search_off</span>
+                            <p class="text-sm text-on-surface-variant mt-2 italic">No mentees match the selected filters.</p>
+                        </div>
+
+                        <% mentees.forEach(student => { %>
+                        <div class="mentee-card bg-white border border-outline-variant/30 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
+                             data-dept="<%= (student.department || '').toLowerCase() %>"
+                             data-year="<%= (student.year || '').toLowerCase() %>"
+                             data-section="<%= (student.section || '').toLowerCase() %>">
+                            <!-- Decorative accent -->
+                            <div class="absolute top-0 right-0 w-20 h-20 bg-tertiary/5 rounded-bl-full"></div>
+
+                            <div class="flex items-start gap-4 relative">
+                                <div class="w-12 h-12 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center font-bold text-lg shrink-0 border border-tertiary/20">
+                                    <%= student.name.charAt(0) %>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-bold text-on-surface text-sm truncate"><%= student.name %></p>
+                                    <p class="text-[10px] font-code text-on-surface-variant font-bold"><%= student.secId %></p>
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        <span class="px-1.5 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded border border-outline-variant/20"><%= student.department %></span>
+                                        <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded border border-primary/20"><%= student.year %></span>
+                                        <% if (student.section) { %>
+                                        <span class="px-1.5 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded border border-secondary/20">Sec&nbsp;<%= student.section %></span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-outline-variant/10 flex items-center justify-between">
+                                <span class="text-xs text-on-surface-variant"><%= student.classroom ? student.classroom.name : 'No classroom' %></span>
+                                <button onclick="removeMentee('<%= student._id %>', '<%= student.name %>')" class="text-[10px] text-error/80 hover:text-error font-bold flex items-center gap-1 transition-all">
+                                    <span class="material-symbols-outlined text-xs">group_remove</span> Remove
+                                </button>
+                            </div>
+                        </div>
+                        <% }) %>
+                    </div>
+                    <% } %>
+                </div>
+
+                <!-- Mentee Group Chat Digest -->
+                <div class="lg:col-span-1">
+                    <h4 class="font-bold text-on-surface mb-4 text-base flex items-center gap-2">
+                        <span class="material-symbols-outlined text-tertiary text-lg">mark_chat_unread</span> Group Messages
+                    </h4>
+                    <div class="bg-white border border-outline-variant/30 rounded-2xl shadow-sm overflow-hidden flex flex-col max-h-[600px]">
+                        <div class="p-4 border-b border-outline-variant/10 bg-tertiary/5">
+                            <p class="text-xs text-on-surface-variant font-semibold">Messages sent to your mentee group</p>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                            <% if (menteeMessages.length === 0) { %>
+                            <div class="text-center py-8">
+                                <span class="material-symbols-outlined text-[40px] text-outline-variant/40">inbox</span>
+                                <p class="text-xs text-on-surface-variant mt-2 italic">No group messages yet.</p>
+                            </div>
+                            <% } else { %>
+                            <% menteeMessages.forEach(msg => { %>
+                            <div class="p-3 bg-tertiary/5 border border-tertiary/20 rounded-xl">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="material-symbols-outlined text-tertiary text-xs">group</span>
+                                    <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Mentee Group</span>
+                                    <span class="ml-auto text-[10px] text-on-surface-variant/70"><%= new Date(msg.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) %></span>
+                                </div>
+                                <p class="text-sm text-on-surface leading-relaxed"><%= msg.content %></p>
+                            </div>
+                            <% }) %>
+                            <% } %>
+                        </div>
+                        <div class="p-3 border-t border-outline-variant/10">
+                            <a href="/messages" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-tertiary text-white rounded-xl font-bold text-sm hover:brightness-110 transition-all">
+                                <span class="material-symbols-outlined text-sm">send</span> Send Group Message
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function filterMentees() {
+            const dept    = document.getElementById('filterDept')?.value.toLowerCase() || '';
+            const yr      = document.getElementById('filterClass')?.value.toLowerCase() || '';
+            const sec     = document.getElementById('filterSection')?.value.toLowerCase() || '';
+
+            const cards = document.querySelectorAll('.mentee-card');
+            let visible = 0;
+
+            cards.forEach(card => {
+                const matchDept = !dept || card.dataset.dept === dept;
+                const matchYear = !yr   || card.dataset.year === yr;
+                const matchSec  = !sec  || card.dataset.section === sec;
+
+                if (matchDept && matchYear && matchSec) {
+                    card.style.display = '';
+                    visible++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update visible count stat
+            const countEl = document.getElementById('visibleCount');
+            if (countEl) countEl.textContent = visible;
+
+            // Show/hide no-results placeholder
+            const noResults = document.getElementById('noFilterResults');
+            if (noResults) noResults.classList.toggle('hidden', visible > 0);
+
+            // Filter badge & clear button
+            const activeCount = [dept, yr, sec].filter(Boolean).length;
+            const badge = document.getElementById('filterBadge');
+            const clearBtn = document.getElementById('clearBtn');
+            if (badge && clearBtn) {
+                if (activeCount > 0) {
+                    badge.textContent = `${activeCount} filter${activeCount > 1 ? 's' : ''} active`;
+                    badge.classList.remove('hidden');
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                    clearBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        function clearFilters() {
+            ['filterDept', 'filterClass', 'filterSection'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            filterMentees();
+        }
+
+        async function removeMentee(studentId, name) {
+            if (!confirm(`Remove ${name} from your mentee group?`)) return;
+            try {
+                const res = await fetch(`/api/students/${studentId}/mentee`, { method: 'DELETE' });
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to remove mentee.');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Connection error.');
+            }
+        }
+    </script>
+</body>
+</html>

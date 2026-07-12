@@ -1,0 +1,33 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Node dependencies & logs
+node_modules/
+npm-debug.log*
+Thumbs.db
+
+# Scratch and temporary directories
+scratch/
+server/scratch/
+server/server_log.txt
+*_log.txt
+*.log
+

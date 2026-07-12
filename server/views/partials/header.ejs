@@ -1,0 +1,263 @@
+<!-- TopNavBar Partial -->
+<header class="fixed top-0 w-full z-45 flex justify-between items-center px-margin-desktop h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm lg:pl-[280px]">
+    <div class="flex items-center gap-8">
+        <h2 class="font-headline-md text-headline-md font-bold text-primary lg:hidden">EduPoll</h2>
+    </div>
+    
+    <div class="flex items-center gap-4">
+        <!-- Search field linked to search list function if defined -->
+        <div class="relative hidden sm:block">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-sm">search</span>
+            <input type="text" id="globalSearchInput" onkeyup="handleGlobalSearch(this)" placeholder="Search students, classrooms..." class="pl-9 pr-4 py-1.5 rounded-full border-outline-variant/50 bg-surface-container-low text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary border transition-all w-64">
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Notifications Trigger Button -->
+            <button onclick="toggleNotificationsSlideOver(true)" class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full relative transition-all">
+                <span class="material-symbols-outlined">notifications</span>
+                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
+                <span id="headerUnreadDot" class="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white animate-pulse"></span>
+                <% } %>
+            </button>
+            
+            <!-- Settings Trigger Button -->
+            <button onclick="toggleSettingsSlideOver(true)" class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
+            
+            <!-- Profile Avatar Dropdown Menu Container -->
+            <div class="relative ml-2">
+                <button onclick="toggleProfileDropdown(event)" class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant/50 cursor-pointer focus:outline-none">
+                    <img class="w-full h-full object-cover" alt="User profile" src="<%= (user && user.profilePhoto) ? user.profilePhoto : 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23757575\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>' %>">
+                </button>
+                
+                <!-- Dropdown Card -->
+                <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-outline-variant/30 rounded-xl shadow-xl py-2 z-50 animate-fade-in-down">
+                    <div class="px-4 py-2 border-b border-outline-variant/20">
+                        <p class="text-xs text-on-surface-variant">Signed in as</p>
+                        <p class="font-bold text-sm text-on-surface truncate"><%= user ? user.name : 'Administrator' %></p>
+                    </div>
+                    <a href="/faculty/profile" class="flex items-center gap-2 px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-sm">person</span> My Profile
+                    </a>
+                    <a href="/api/auth/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-error hover:bg-error-container/10 border-t border-outline-variant/20 mt-1">
+                        <span class="material-symbols-outlined text-sm">logout</span> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Notifications Slide-Over -->
+<div id="notificationsSlideOver" class="fixed inset-0 overflow-hidden z-50 hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 overflow-hidden">
+        <!-- Overlay Background -->
+        <div onclick="toggleNotificationsSlideOver(false)" class="absolute inset-0 bg-inverse-surface/30 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+        <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+            <div class="pointer-events-auto w-screen max-w-md transform transition-all duration-300 translate-x-full" id="notificationsPanel">
+                <div class="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-2xl border-l border-outline-variant/20">
+                    <div class="px-4 sm:px-6 flex justify-between items-center pb-4 border-b border-outline-variant/20">
+                        <h2 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">notifications</span> Incoming Messages
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <button onclick="markAllNotificationsRead()" class="text-xs font-bold text-primary hover:underline px-2.5 py-1.5 bg-primary/10 rounded-lg flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">done_all</span> Read all
+                            </button>
+                            <button onclick="toggleNotificationsSlideOver(false)" class="rounded-md text-on-surface-variant hover:text-on-surface outline-none p-1">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative mt-4 flex-1 px-4 sm:px-6 space-y-3">
+                        <% if (typeof recentMessages !== 'undefined' && recentMessages && recentMessages.length > 0) { %>
+                            <% recentMessages.forEach(msg => { %>
+                            <a href="/messages" class="block p-3.5 bg-surface-container-low hover:bg-primary/5 rounded-xl border border-outline-variant/30 transition-all group">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                            <%= msg.sender && msg.sender.name ? msg.sender.name.charAt(0) : '?' %>
+                                        </div>
+                                        <span class="text-xs font-bold text-on-surface truncate max-w-[150px]"><%= msg.sender && msg.sender.name ? msg.sender.name : 'Unknown' %></span>
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant uppercase tracking-wider">
+                                            <%= msg.sender && msg.sender.role ? msg.sender.role : 'user' %>
+                                        </span>
+                                    </div>
+                                    <span class="text-[10px] text-on-surface-variant/70">
+                                        <%= new Date(msg.timestamp).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-on-surface-variant leading-relaxed line-clamp-2 mt-1 font-normal">
+                                    <%= msg.content %>
+                                </p>
+                            </a>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="text-center py-12">
+                                <span class="material-symbols-outlined text-[48px] text-outline-variant/40">inbox</span>
+                                <p class="text-sm font-semibold text-on-surface mt-2">No incoming messages</p>
+                                <p class="text-xs text-on-surface-variant mt-1">When someone sends a message, it will show up right here.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function markAllNotificationsRead() {
+    try {
+        await fetch('/api/messages/read-all', { method: 'POST' });
+        const dot = document.getElementById('headerUnreadDot');
+        if (dot) dot.remove();
+        const sidebarDots = document.querySelectorAll('.unread-badge-dot');
+        sidebarDots.forEach(el => el.remove());
+        window.location.reload();
+    } catch (e) {
+        console.error('Error marking all as read:', e);
+    }
+}
+</script>
+
+<!-- Settings Slide-Over -->
+<div id="settingsSlideOver" class="fixed inset-0 overflow-hidden z-50 hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 overflow-hidden">
+        <!-- Overlay Background -->
+        <div onclick="toggleSettingsSlideOver(false)" class="absolute inset-0 bg-inverse-surface/30 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+        <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+            <div class="pointer-events-auto w-screen max-w-md transform transition-all duration-300 translate-x-full" id="settingsPanel">
+                <div class="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-2xl border-l border-outline-variant/20">
+                    <div class="px-4 sm:px-6 flex justify-between items-center pb-4 border-b border-outline-variant/20">
+                        <h2 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">settings</span> Settings Panel
+                        </h2>
+                        <button onclick="toggleSettingsSlideOver(false)" class="rounded-md text-on-surface-variant hover:text-on-surface outline-none">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    <div class="relative mt-6 flex-1 px-4 sm:px-6 space-y-6">
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">General Options</h3>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary">
+                                <span class="text-sm font-semibold text-on-surface">Enable email notifications</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary">
+                                <span class="text-sm font-semibold text-on-surface">Enable mobile alerts sync</span>
+                            </label>
+                        </div>
+                        <div class="space-y-3 border-t border-outline-variant/20 pt-6">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Database Engine Status</h3>
+                            <div class="p-4 bg-surface-container rounded-xl flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-bold">Database Mode</p>
+                                    <p class="text-xs text-on-surface-variant" id="dbModeLabel">Loading...</p>
+                                </div>
+                                <span id="dbModeBadge" class="px-2 py-1 rounded text-xs font-bold font-mono">STATUS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global profiles dropdown toggle
+    function toggleProfileDropdown(e) {
+        e.stopPropagation();
+        const drop = document.getElementById('profileDropdown');
+        drop.classList.toggle('hidden');
+    }
+    
+    // Close dropdown on click outside
+    window.addEventListener('click', () => {
+        const drop = document.getElementById('profileDropdown');
+        if (drop && !drop.classList.contains('hidden')) {
+            drop.classList.add('hidden');
+        }
+    });
+
+    // Toggle Notifications slide over
+    function toggleNotificationsSlideOver(open) {
+        const drawer = document.getElementById('notificationsSlideOver');
+        const panel = document.getElementById('notificationsPanel');
+        if (open) {
+            drawer.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+            }, 50);
+        } else {
+            panel.classList.add('translate-x-full');
+            setTimeout(() => {
+                drawer.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    // Toggle Settings slide over
+    function toggleSettingsSlideOver(open) {
+        const drawer = document.getElementById('settingsSlideOver');
+        const panel = document.getElementById('settingsPanel');
+        if (open) {
+            drawer.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+            }, 50);
+            
+            // Check db status dynamically
+            fetch('/api/status/db')
+                .then(r => r.json())
+                .then(data => {
+                    const label = document.getElementById('dbModeLabel');
+                    const badge = document.getElementById('dbModeBadge');
+                    label.innerText = data.isMemory ? 'In-Memory Fallback' : 'Connected to MongoDB';
+                    
+                    if (data.isMemory) {
+                        badge.innerText = 'OFFLINE FALLBACK';
+                        badge.className = 'px-2 py-1 rounded text-xs font-bold font-mono bg-error-container text-on-error-container';
+                    } else {
+                        badge.innerText = 'ONLINE';
+                        badge.className = 'px-2 py-1 rounded text-xs font-bold font-mono bg-green-100 text-green-700';
+                    }
+                }).catch(() => {});
+        } else {
+            panel.classList.add('translate-x-full');
+            setTimeout(() => {
+                drawer.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    // Live search filters table/card lists
+    function handleGlobalSearch(input) {
+        const filterVal = input.value.trim().toLowerCase();
+        
+        // Dynamic front-end lists filtering!
+        // 1. Classrooms
+        const classroomCards = document.querySelectorAll('.classroom-card');
+        classroomCards.forEach(card => {
+            const txt = card.innerText.toLowerCase();
+            card.style.display = txt.includes(filterVal) ? '' : 'none';
+        });
+
+        // 2. Students list table
+        const studentRows = document.querySelectorAll('tbody tr');
+        studentRows.forEach(row => {
+            const txt = row.innerText.toLowerCase();
+            row.style.display = txt.includes(filterVal) ? '' : 'none';
+        });
+
+        // 3. Polls list
+        const pollCards = document.querySelectorAll('.poll-card');
+        pollCards.forEach(card => {
+            const txt = card.innerText.toLowerCase();
+            card.style.display = txt.includes(filterVal) ? '' : 'none';
+        });
+    }
+</script>

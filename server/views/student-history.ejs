@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll History & Attendance - EduPoll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        code: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: '#1D4ED8',
+                        'primary-container': '#DBEAFE',
+                        'on-primary-container': '#1E3A8A',
+                        secondary: '#475569',
+                        tertiary: '#0F766E',
+                        'tertiary-container': '#CCFBF1',
+                        'on-tertiary-container': '#115E59',
+                        surface: '#F8FAFC',
+                        'surface-container-lowest': '#FFFFFF',
+                        'surface-container-low': '#F1F5F9',
+                        'on-surface': '#0F172A',
+                        'on-surface-variant': '#64748B',
+                        'outline-variant': '#E2E8F0',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface font-sans text-on-surface min-h-screen">
+
+    <!-- Top Navigation Header -->
+    <header class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-outline-variant/40 z-30 px-4 md:px-8 flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-4">
+            <a href="/student/polls" class="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+                <span class="material-symbols-outlined text-primary text-3xl font-variation-settings-'FILL'-1">school</span>
+                <span class="font-extrabold text-lg tracking-tight text-on-surface">EduPoll</span>
+                <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold ml-1">Student Portal</span>
+            </a>
+            <div class="hidden md:flex gap-6 items-center ml-8 border-l border-outline-variant/20 pl-6">
+                <span class="text-sm font-semibold text-on-surface">Poll History & Attendance</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="/student/polls" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
+                <span class="material-symbols-outlined text-xs">poll</span> Polls
+            </a>
+            <a href="/student/mentees" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-tertiary-container/10 transition-all text-xs font-bold text-tertiary rounded-xl">
+                <span class="material-symbols-outlined text-xs">groups</span> Mentorship Group
+            </a>
+            <a href="/student/history" class="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-xs font-bold text-primary rounded-xl">
+                <span class="material-symbols-outlined text-xs">history</span> Poll History
+            </a>
+            <a href="/messages" class="relative flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
+                <span class="material-symbols-outlined text-xs">chat</span> Messages
+                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
+                <span class="unread-badge-dot absolute -top-1 -right-1 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white animate-pulse" title="Unread messages"></span>
+                <% } %>
+            </a>
+
+            <!-- User Profile Menu (Logo + Name ONLY, no SEC ID) -->
+            <div class="relative">
+                <button onclick="toggleStudentUserMenu(event)" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-surface-container-low border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+                    <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs shadow-sm">
+                        <%= user ? user.name.charAt(0) : 'S' %>
+                    </div>
+                    <span class="text-sm font-semibold text-on-surface"><%= user ? user.name : 'Student' %></span>
+                    <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="studentUserMenu" class="hidden absolute right-0 mt-2 w-52 bg-white border border-outline-variant/60 rounded-2xl shadow-xl py-2 z-50 animate-fade-in">
+                    <div class="px-4 py-2 border-b border-outline-variant/30 mb-1">
+                        <p class="text-xs font-bold text-on-surface"><%= user ? user.name : 'Student' %></p>
+                        <p class="text-[11px] text-on-surface-variant truncate"><%= user ? user.email : '' %></p>
+                    </div>
+                    <a href="/student/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-all">
+                        <span class="material-symbols-outlined text-base">person</span> My Profile
+                    </a>
+                    <a href="/api/auth/logout" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 transition-all">
+                        <span class="material-symbols-outlined text-base">logout</span> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 pb-20 px-4 md:px-8 max-w-6xl mx-auto">
+        <!-- Title Header -->
+        <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-on-surface flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined">history</span>
+                    </span>
+                    Poll Attendance & Response History
+                </h1>
+                <p class="text-sm text-on-surface-variant mt-1">Review your classroom poll participation and track whether sessions were attended.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/student/polls" class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow hover:bg-primary/90 transition-all">
+                    <span class="material-symbols-outlined text-sm">play_arrow</span> Live Classroom Polls
+                </a>
+            </div>
+        </div>
+
+        <!-- Summary Stats Banner -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white border border-outline-variant/40 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Total Polls</span>
+                    <span class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sm">poll</span>
+                    </span>
+                </div>
+                <div class="text-2xl font-extrabold text-on-surface mt-2"><%= stats.totalCount %></div>
+                <p class="text-xs text-on-surface-variant mt-1">Classroom sessions deployed</p>
+            </div>
+
+            <div class="bg-white border border-outline-variant/40 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Attended</span>
+                    <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                    </span>
+                </div>
+                <div class="text-2xl font-extrabold text-emerald-600 mt-2"><%= stats.attendedCount %></div>
+                <p class="text-xs text-on-surface-variant mt-1">Successfully submitted answers</p>
+            </div>
+
+            <div class="bg-white border border-outline-variant/40 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Not Attended</span>
+                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sm">cancel</span>
+                    </span>
+                </div>
+                <div class="text-2xl font-extrabold text-amber-600 mt-2"><%= stats.missedCount %></div>
+                <p class="text-xs text-on-surface-variant mt-1">Missed or unanswered polls</p>
+            </div>
+
+            <div class="bg-white border border-outline-variant/40 rounded-2xl p-5 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-primary uppercase tracking-wider">Attendance Rate</span>
+                    <span class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sm">insights</span>
+                    </span>
+                </div>
+                <div class="text-2xl font-extrabold text-primary mt-2"><%= stats.attendanceRate %>%</div>
+                <p class="text-xs text-on-surface-variant mt-1">Overall session completion</p>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex items-center justify-between border-b border-outline-variant/40 mb-6 pb-4">
+            <div class="flex items-center gap-2">
+                <button onclick="filterHistory('all')" id="tab-all" class="filter-tab active px-4 py-2 rounded-xl text-xs font-bold transition-all bg-primary text-white shadow-sm">
+                    All Polls (<%= stats.totalCount %>)
+                </button>
+                <button onclick="filterHistory('attended')" id="tab-attended" class="filter-tab px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white border border-outline-variant text-on-surface hover:bg-emerald-50 hover:text-emerald-700">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
+                    Attended (<%= stats.attendedCount %>)
+                </button>
+                <button onclick="filterHistory('missed')" id="tab-missed" class="filter-tab px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white border border-outline-variant text-on-surface hover:bg-amber-50 hover:text-amber-700">
+                    <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>
+                    Not Attended (<%= stats.missedCount %>)
+                </button>
+            </div>
+        </div>
+
+        <!-- History List -->
+        <% if (history && history.length > 0) { %>
+            <div class="space-y-4" id="historyList">
+                <% history.forEach(poll => { %>
+                    <div class="poll-item bg-white border border-outline-variant/40 rounded-2xl p-5 shadow-xs hover:border-primary/30 transition-all" data-status="<%= poll.attended ? 'attended' : 'missed' %>">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-outline-variant/20">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl <%= poll.attended ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600' %> flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined"><%= poll.attended ? 'check_circle' : 'cancel' %></span>
+                                </div>
+                                <div>
+                                    <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded <%= poll.attended ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200' %>">
+                                        <%= poll.attended ? 'Attended' : 'Not Attended / Missed' %>
+                                    </span>
+                                    <span class="text-xs text-on-surface-variant ml-2">
+                                        Classroom: <strong class="text-on-surface"><%= poll.classroom ? (poll.classroom.name || 'Classroom') : 'Classroom' %></strong>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-xs text-on-surface-variant font-code">
+                                <%= new Date(poll.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h3 class="text-base font-bold text-on-surface leading-snug"><%= poll.question %></h3>
+                        </div>
+
+                        <!-- Response / Status Details -->
+                        <div class="mt-4 pt-3 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <% if (poll.attended && poll.myResponse) { %>
+                                <div class="flex items-center gap-2 bg-emerald-50/70 border border-emerald-200/60 px-3 py-2 rounded-xl">
+                                    <span class="material-symbols-outlined text-emerald-600 text-sm">verified</span>
+                                    <span class="text-xs text-emerald-900 font-medium">
+                                        Your Recorded Answer: <strong class="font-bold"><%= poll.myResponse.selectedOption %></strong>
+                                    </span>
+                                </div>
+                            <% } else { %>
+                                <div class="flex items-center gap-2 bg-amber-50/70 border border-amber-200/60 px-3 py-2 rounded-xl">
+                                    <span class="material-symbols-outlined text-amber-600 text-sm">info</span>
+                                    <span class="text-xs text-amber-900 font-medium">
+                                        Status: You did not submit an answer during this live poll session.
+                                    </span>
+                                </div>
+                            <% } %>
+
+                            <div class="text-xs text-on-surface-variant flex items-center gap-3">
+                                <span>Options: <strong class="text-on-surface"><%= (poll.options || []).length %></strong></span>
+                                <span>•</span>
+                                <span>Total Class Responses: <strong class="text-on-surface"><%= (poll.responses || []).length %></strong></span>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } else { %>
+            <!-- Empty State -->
+            <div class="bg-white border border-outline-variant/30 rounded-2xl p-14 text-center max-w-lg mx-auto">
+                <div class="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-3xl">history</span>
+                </div>
+                <h3 class="text-lg font-bold text-on-surface">No Poll History Found</h3>
+                <p class="text-sm text-on-surface-variant mt-2">You haven't participated in any classroom polls yet. As soon as polls are deployed by your faculty, your attendance history will appear here.</p>
+                <a href="/student/polls" class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-xs shadow hover:bg-primary/90">
+                    <span class="material-symbols-outlined text-sm">play_arrow</span> View Live Polls
+                </a>
+            </div>
+        <% } %>
+    </main>
+
+    <script>
+        function filterHistory(filter) {
+            // Update button styles
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-white', 'border', 'border-outline-variant', 'text-on-surface');
+            });
+            const activeBtn = document.getElementById('tab-' + filter);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'border', 'border-outline-variant', 'text-on-surface');
+                activeBtn.classList.add('bg-primary', 'text-white', 'shadow-sm');
+            }
+
+            // Filter poll items
+            document.querySelectorAll('.poll-item').forEach(item => {
+                const status = item.getAttribute('data-status');
+                if (filter === 'all' || status === filter) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleStudentUserMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('studentUserMenu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+        document.addEventListener('click', () => {
+            const menu = document.getElementById('studentUserMenu');
+            if (menu && !menu.classList.contains('hidden')) menu.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

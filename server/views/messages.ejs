@@ -1,0 +1,473 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Shared layouts -->
+    <% if (user.role !== 'student') { %>
+        <%- include('partials/sidebar') %>
+        <%- include('partials/header') %>
+    <% } else { %>
+        <!-- Simple Top Header for Student Layout -->
+        <header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-surface/85 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+            <div class="flex items-center gap-4">
+                <span class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span> EduPoll
+                </span>
+                <div class="hidden md:flex gap-6 items-center ml-8 border-l border-outline-variant/20 pl-6">
+                    <span class="text-sm font-semibold text-on-surface">Student Portal</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/student/polls" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
+                    <span class="material-symbols-outlined text-xs">poll</span> Polls
+                </a>
+                <a href="/student/mentees" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-tertiary-container/10 transition-all text-xs font-bold text-tertiary rounded-xl">
+                    <span class="material-symbols-outlined text-xs">groups</span> Mentorship Group
+                </a>
+                <a href="/student/history" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
+                    <span class="material-symbols-outlined text-xs">history</span> Poll History
+                </a>
+                <!-- User Profile Menu (Logo + Name ONLY, no SEC ID) -->
+                <div class="relative">
+                    <button onclick="toggleStudentUserMenu(event)" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-surface-container-low border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+                        <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs shadow-sm">
+                            <%= user ? user.name.charAt(0) : 'S' %>
+                        </div>
+                        <span class="text-sm font-semibold text-on-surface"><%= user ? user.name : 'Student' %></span>
+                        <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="studentUserMenu" class="hidden absolute right-0 mt-2 w-52 bg-white border border-outline-variant/60 rounded-2xl shadow-xl py-2 z-50 animate-fade-in">
+                        <div class="px-4 py-2 border-b border-outline-variant/30 mb-1">
+                            <p class="text-xs font-bold text-on-surface"><%= user ? user.name : 'Student' %></p>
+                            <p class="text-[11px] text-on-surface-variant truncate"><%= user ? user.email : '' %></p>
+                        </div>
+                        <a href="/student/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-all">
+                            <span class="material-symbols-outlined text-base">person</span> My Profile
+                        </a>
+                        <a href="/api/auth/logout" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 transition-all">
+                            <span class="material-symbols-outlined text-base">logout</span> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+    <% } %>
+
+    <!-- Main Chat Workspace -->
+    <main class="pt-20 lg:pt-24 pb-20 px-margin-mobile md:px-margin-desktop <%= (user.role !== 'student') ? 'lg:pl-[280px]' : '' %> min-h-[calc(100vh-80px)] flex items-stretch">
+        <div class="w-full max-w-[1440px] mx-auto bg-white border border-outline-variant/30 rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[75vh] min-h-[500px]">
+            
+            <!-- Left Conversations Sidebar -->
+            <section class="w-full md:w-80 border-r border-outline-variant/20 flex flex-col bg-surface-container-low/20">
+                <div class="p-4 border-b border-outline-variant/20 bg-white flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-on-surface text-base flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">forum</span> Inbox Conversations
+                        </h3>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Select a thread or group channel to message.</p>
+                    </div>
+                    <!-- Menu with option Read All -->
+                    <div class="relative">
+                        <button onclick="toggleMessagesMenu(event, 'inboxMenuDropdown')" class="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant transition-all" title="Options">
+                            <span class="material-symbols-outlined">more_vert</span>
+                        </button>
+                        <div id="inboxMenuDropdown" class="hidden absolute right-0 mt-1 w-44 bg-white border border-outline-variant/30 rounded-xl shadow-lg py-1.5 z-30">
+                            <button onclick="markAllMessagesPageRead()" class="w-full text-left px-3.5 py-2 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">done_all</span> Read all
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Channels & Recipients Roster List -->
+                <div class="flex-1 overflow-y-auto p-2 space-y-1" id="threadsList">
+                    <!-- ADMIN USER VIEW CHANNELS -->
+                    <% if (user.role === 'admin') { %>
+                        <button onclick="switchThread('all_faculty', 'all_faculty', 'Broadcast Notice (All Staff)', 'campaign')" 
+                                id="thread-all_faculty" 
+                                class="w-full text-left p-3 rounded-xl hover:bg-primary-container/10 transition-all flex items-center gap-3 border border-transparent font-semibold text-sm">
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                <span class="material-symbols-outlined text-lg">campaign</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-primary truncate text-xs">Broadcast (All Staff)</p>
+                                </div>
+                                <p class="text-[10px] text-on-surface-variant truncate">Send alert to all instructors</p>
+                            </div>
+                        </button>
+
+                        <div class="border-t border-outline-variant/10 my-2 pt-2 px-2">
+                            <span class="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">Faculty Members</span>
+                        </div>
+
+                        <% faculties.forEach(fac => { %>
+                            <button onclick="switchThread('<%= fac._id %>', 'direct', '<%= fac.name %>', 'co_present')" 
+                                    id="thread-<%= fac._id %>" 
+                                    class="w-full text-left p-3 rounded-xl hover:bg-primary-container/10 transition-all flex items-center gap-3 border border-transparent text-sm">
+                                <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary border border-outline-variant/30">
+                                    <%= fac.name.charAt(0) %>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-on-surface truncate"><%= fac.name %></p>
+                                    <p class="text-[10px] text-on-surface-variant truncate"><%= fac.department %></p>
+                                </div>
+                            </button>
+                        <% }) %>
+                    <% } %>
+
+                    <!-- FACULTY USER VIEW CHANNELS -->
+                    <% if (user.role === 'faculty') { %>
+                        <% if (adminUser) { %>
+                            <button onclick="switchThread('<%= adminUser._id %>', 'direct', 'Principal Admin', 'admin_panel_settings')" 
+                                    id="thread-<%= adminUser._id %>" 
+                                    class="w-full text-left p-3 rounded-xl hover:bg-primary-container/10 transition-all flex items-center gap-3 border border-transparent text-sm">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                    <span class="material-symbols-outlined text-lg">admin_panel_settings</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-bold text-on-surface truncate">Principal Admin</p>
+                                    <p class="text-[10px] text-on-surface-variant truncate">Administrator Portal</p>
+                                </div>
+                            </button>
+                        <% } %>
+
+                        <button onclick="switchThread('mentees_only', 'mentees_only', 'Mentee Group Broadcast', 'group')" 
+                                id="thread-mentees_only" 
+                                class="w-full text-left p-3 rounded-xl hover:bg-tertiary-container/20 transition-all flex items-center gap-3 border border-transparent font-semibold text-sm">
+                            <div class="w-10 h-10 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center font-bold">
+                                <span class="material-symbols-outlined text-lg">group</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-tertiary truncate text-xs">My Mentees Broadcast</p>
+                                <p class="text-[10px] text-on-surface-variant truncate"><%= mentees.length %> mentee<%= mentees.length !== 1 ? 's' : '' %> in your group</p>
+                            </div>
+                        </button>
+
+                        <button onclick="switchThread('all_students', 'all_students', 'Broadcast (All Students)', 'campaign')" 
+                                id="thread-all_students" 
+                                class="w-full text-left p-3 rounded-xl hover:bg-primary-container/10 transition-all flex items-center gap-3 border border-transparent font-semibold text-sm">
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                <span class="material-symbols-outlined text-lg">campaign</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-primary truncate text-xs">Broadcast (All Students)</p>
+                                <p class="text-[10px] text-on-surface-variant truncate">Post notice to all students</p>
+                            </div>
+                        </button>
+
+                        <div class="border-t border-outline-variant/10 my-2 pt-2 px-2">
+                            <span class="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider">Students Roster</span>
+                        </div>
+
+                        <% students.forEach(student => { %>
+                            <button onclick="switchThread('<%= student._id %>', 'direct', '<%= student.name %>', 'people')" 
+                                    id="thread-<%= student._id %>" 
+                                    class="w-full text-left p-3 rounded-xl hover:bg-primary-container/10 transition-all flex items-center gap-3 border border-transparent text-sm">
+                                <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center font-bold text-on-surface-variant border border-outline-variant/30">
+                                    <%= student.name.charAt(0) %>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-on-surface truncate"><%= student.name %></p>
+                                    <p class="text-[10px] text-on-surface-variant truncate"><%= student.secId %> • <%= student.year %></p>
+                                </div>
+                            </button>
+                        <% }) %>
+                    <% } %>
+
+                    <!-- STUDENT USER VIEW CHANNELS -->
+                    <% if (user.role === 'student') { %>
+                        <button onclick="switchThread('all_students', 'broadcast_read', 'Broadcast Notice Board', 'campaign')" 
+                                id="thread-all_students" 
+                                class="w-full text-left p-3 rounded-xl hover:bg-primary-container/10 transition-all flex items-center gap-3 border border-transparent font-semibold text-sm">
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                <span class="material-symbols-outlined text-lg">campaign</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-primary truncate text-xs">Faculty Broadcast Notices</p>
+                                <p class="text-[10px] text-on-surface-variant truncate">Read-Only Announcements</p>
+                            </div>
+                        </button>
+
+                        <div class="border-t border-outline-variant/10 my-2 pt-2 px-2">
+                            <span class="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider font-bold">Your Instructors</span>
+                        </div>
+
+                        <% faculties.forEach(fac => { %>
+                            <button onclick="switchThread('<%= fac._id %>', 'direct', '<%= fac.name %>', 'co_present')" 
+                                    id="thread-<%= fac._id %>" 
+                                    class="w-full text-left p-3 rounded-xl hover:bg-primary-container/10 transition-all flex items-center gap-3 border border-transparent text-sm">
+                                <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary border border-outline-variant/30">
+                                    <%= fac.name.charAt(0) %>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-on-surface truncate"><%= fac.name %></p>
+                                    <p class="text-[10px] text-on-surface-variant truncate"><%= fac.department %></p>
+                                </div>
+                            </button>
+                        <% }) %>
+                    <% } %>
+                </div>
+            </section>
+
+            <!-- Right Message Canvas -->
+            <section class="flex-1 flex flex-col bg-surface-container-lowest/50">
+                <!-- Conversation Header -->
+                <div class="p-4 border-b border-outline-variant/20 bg-white flex justify-between items-center h-16 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div id="activeAvatarBox" class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                            <span class="material-symbols-outlined" id="activeAvatarIcon">forum</span>
+                        </div>
+                        <div>
+                            <h4 id="activeChatTitle" class="font-bold text-on-surface text-sm">Select a Conversation</h4>
+                            <p id="activeChatSubtitle" class="text-[10px] text-on-surface-variant">Choose a contact to begin messaging.</p>
+                        </div>
+                    </div>
+                    <!-- Menu option Read all -->
+                    <div class="relative">
+                        <button onclick="toggleMessagesMenu(event, 'chatHeaderMenuDropdown')" class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-all" title="Menu">
+                            <span class="material-symbols-outlined">more_vert</span>
+                        </button>
+                        <div id="chatHeaderMenuDropdown" class="hidden absolute right-0 mt-1 w-44 bg-white border border-outline-variant/30 rounded-xl shadow-lg py-1.5 z-30">
+                            <button onclick="markAllMessagesPageRead()" class="w-full text-left px-3.5 py-2 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">done_all</span> Read all
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Logs Area -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chatArea">
+                    <!-- Default Screen -->
+                    <div class="flex flex-col items-center justify-center h-full text-center space-y-3 text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[64px] text-outline-variant">chat_bubble</span>
+                        <h5 class="text-sm font-bold">No Conversation Selected</h5>
+                        <p class="text-xs max-w-xs leading-relaxed">Choose a contact or channel from the left panel to display messages.</p>
+                    </div>
+                </div>
+
+                <!-- Text Area Input Bar -->
+                <div class="p-4 border-t border-outline-variant/20 bg-white shrink-0 hidden" id="chatInputArea">
+                    <form onsubmit="dispatchMessage(event)" class="flex gap-3">
+                        <input type="text" id="messageInput" autocomplete="off" placeholder="Write your message..." required class="flex-1 px-4 py-3 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm bg-surface-container-lowest">
+                        <button type="submit" class="px-5 py-3 bg-primary text-white font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
+                            <span>Send</span> <span class="material-symbols-outlined text-sm">send</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Embedded Local Data variables -->
+    <script>
+        const allMessages = <%- JSON.stringify(messages) %>;
+        const currentUserId = '<%= user._id %>';
+        const currentUserRole = '<%= user.role %>';
+
+        let activeThreadId = null;
+        let activeThreadType = null; // 'direct', 'all_faculty', 'all_students', 'mentees_only', 'broadcast_read'
+        let activeThreadName = "";
+
+        function switchThread(threadId, type, name, iconName) {
+            activeThreadId = threadId;
+            activeThreadType = type;
+            activeThreadName = name;
+
+            // Highlight in sidebar
+            const buttons = document.querySelectorAll('#threadsList button');
+            buttons.forEach(btn => {
+                btn.className = btn.className.replace('bg-primary-container/10 border-primary/20', 'border-transparent')
+                                            .replace('bg-tertiary-container/20 border-tertiary/20', 'border-transparent');
+            });
+            const activeBtn = document.getElementById(`thread-${threadId}`);
+            if (activeBtn) {
+                if (type === 'mentees_only') {
+                    activeBtn.className = activeBtn.className.replace('border-transparent', 'bg-tertiary-container/20 border-tertiary/20');
+                } else {
+                    activeBtn.className = activeBtn.className.replace('border-transparent', 'bg-primary-container/10 border-primary/20');
+                }
+            }
+
+            // Update Header
+            document.getElementById('activeChatTitle').innerText = name;
+            const sub = document.getElementById('activeChatSubtitle');
+            const avatarBox = document.getElementById('activeAvatarBox');
+            const avatarIcon = document.getElementById('activeAvatarIcon');
+
+            if (type === 'mentees_only') {
+                sub.innerText = "Mentee Group Channel (Broadcast to your mentees)";
+                avatarBox.className = "w-10 h-10 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center font-bold";
+                avatarIcon.innerText = "group";
+            } else if (type.startsWith('all_')) {
+                sub.innerText = "Notice Channel (Broadcast Alerts)";
+                avatarBox.className = "w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold";
+                avatarIcon.innerText = "campaign";
+            } else if (type === 'broadcast_read') {
+                sub.innerText = "Notices Board (Read-only alerts)";
+                avatarBox.className = "w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold";
+                avatarIcon.innerText = "campaign";
+            } else {
+                sub.innerText = "Direct Message / Chat";
+                avatarBox.className = "w-10 h-10 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary border border-outline-variant/30";
+                avatarIcon.innerText = name.charAt(0);
+            }
+
+            // Show/Hide Input field
+            const inputBlock = document.getElementById('chatInputArea');
+            if (type === 'broadcast_read') {
+                inputBlock.classList.add('hidden');
+            } else {
+                inputBlock.classList.remove('hidden');
+            }
+
+            // Render Messages logs
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const chatArea = document.getElementById('chatArea');
+            chatArea.innerHTML = "";
+
+            // Filter relevant messages
+            let filtered = [];
+            if (activeThreadType === 'all_faculty') {
+                filtered = allMessages.filter(m => m.recipientGroup === 'all_faculty');
+            } else if (activeThreadType === 'mentees_only') {
+                filtered = allMessages.filter(m => m.recipientGroup === 'mentees_only');
+            } else if (activeThreadType === 'all_students' || activeThreadType === 'broadcast_read') {
+                filtered = allMessages.filter(m => m.recipientGroup === 'all_students');
+            } else if (activeThreadType === 'direct') {
+                filtered = allMessages.filter(m => {
+                    const senderId = m.sender?._id || m.sender;
+                    const recipientId = m.recipient?._id || m.recipient;
+                    return m.recipientGroup === 'direct' && (
+                        (senderId === currentUserId && recipientId === activeThreadId) ||
+                        (senderId === activeThreadId && recipientId === currentUserId)
+                    );
+                });
+            }
+
+            if (filtered.length === 0) {
+                chatArea.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-center text-on-surface-variant space-y-2">
+                        <span class="material-symbols-outlined text-[48px] text-outline-variant/50">inbox</span>
+                        <p class="text-xs italic">No messages in this chat yet. Send a message to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(m => {
+                const senderId = m.sender?._id || m.sender;
+                const senderName = m.sender?.name || (senderId === currentUserId ? 'You' : 'System');
+                const isMe = senderId === currentUserId;
+                const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                const msgBubble = document.createElement('div');
+                msgBubble.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1 w-full animate-fade-in`;
+
+                let headerLabel = "";
+                if (m.recipientGroup === 'all_faculty') {
+                    headerLabel = `<span class="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[9px] font-bold uppercase tracking-wider mb-1">ALL STAFF NOTICE</span>`;
+                } else if (m.recipientGroup === 'all_students') {
+                    headerLabel = `<span class="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[9px] font-bold uppercase tracking-wider mb-1">ALL STUDENT NOTICE</span>`;
+                } else if (m.recipientGroup === 'mentees_only') {
+                    headerLabel = `<span class="px-2 py-0.5 bg-tertiary/10 text-tertiary rounded-full text-[9px] font-bold uppercase tracking-wider mb-1">MENTEE GROUP</span>`;
+                }
+
+                if (isMe) {
+                    msgBubble.innerHTML = `
+                        ${headerLabel}
+                        <div class="max-w-[70%] ${m.recipientGroup === 'mentees_only' ? 'bg-tertiary' : 'bg-primary'} text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm break-words">
+                            ${m.content}
+                        </div>
+                        <span class="text-[10px] text-on-surface-variant/75 font-medium px-1">${timeStr}</span>
+                    `;
+                } else {
+                    msgBubble.innerHTML = `
+                        ${headerLabel}
+                        <div class="text-[10px] text-on-surface-variant font-bold px-1 mb-0.5">${senderName}</div>
+                        <div class="max-w-[70%] bg-surface-container text-on-surface p-3 rounded-2xl rounded-tl-none shadow-sm text-sm border border-outline-variant/10 break-words">
+                            ${m.content}
+                        </div>
+                        <span class="text-[10px] text-on-surface-variant/75 font-medium px-1">${timeStr}</span>
+                    `;
+                }
+
+                chatArea.appendChild(msgBubble);
+            });
+
+            // Scroll to bottom
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        async function dispatchMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            input.value = "";
+
+            try {
+                const res = await fetch('/api/messages/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content,
+                        recipient: activeThreadType === 'direct' ? activeThreadId : null,
+                        recipientGroup: activeThreadType === 'direct' ? 'direct' : activeThreadType
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    allMessages.push(data.message);
+                    renderMessages();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Failed to dispatch message.');
+                }
+            } catch(err) {
+                console.error(err);
+                alert('Connection error. Please try again.');
+            }
+        }
+
+        function toggleMessagesMenu(event, menuId) {
+            event.stopPropagation();
+            const menu = document.getElementById(menuId);
+            if (menu) {
+                const isHidden = menu.classList.contains('hidden');
+                document.querySelectorAll('#inboxMenuDropdown, #chatHeaderMenuDropdown').forEach(el => el.classList.add('hidden'));
+                if (isHidden) menu.classList.remove('hidden');
+            }
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('#inboxMenuDropdown, #chatHeaderMenuDropdown').forEach(el => el.classList.add('hidden'));
+        });
+
+        async function markAllMessagesPageRead() {
+            try {
+                await fetch('/api/messages/read-all', { method: 'POST' });
+                document.querySelectorAll('.unread-badge-dot, #headerUnreadDot').forEach(el => el.remove());
+            } catch(err) {
+                console.error('Error marking read:', err);
+            }
+        }
+
+        function toggleStudentUserMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('studentUserMenu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+        document.addEventListener('click', () => {
+            const menu = document.getElementById('studentUserMenu');
+            if (menu && !menu.classList.contains('hidden')) menu.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Navigation Shared Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <!-- Main Content Canvas -->
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px] min-h-screen">
+        <div class="max-w-[1440px] mx-auto w-full space-y-xl animate-fade-in">
+            <!-- Header Section -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="font-headline-lg text-headline-lg text-on-surface">Faculty Command Dashboard</h3>
+                    <p class="text-on-surface-variant font-body-md">Live classroom interaction monitoring and metrics control center</p>
+                </div>
+            </div>
+
+            <!-- Metrics Bento Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
+                <!-- Total Students -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 flex flex-col justify-between shadow-sm hover-scale">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-2xl">group</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Total Students</p>
+                        <h4 class="font-display-lg text-display-lg text-on-surface"><%= stats.totalStudents %></h4>
+                    </div>
+                </div>
+
+                <!-- Active Polls -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 flex flex-col justify-between shadow-sm hover-scale">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center text-secondary">
+                            <span class="material-symbols-outlined text-2xl">sensors</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Active Polls</p>
+                        <h4 class="font-display-lg text-display-lg text-on-surface"><%= stats.activePolls %></h4>
+                    </div>
+                </div>
+
+                <!-- Completed Responses -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 flex flex-col justify-between shadow-sm hover-scale">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+                            <span class="material-symbols-outlined text-2xl">verified</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Completed Votes</p>
+                        <h4 class="font-display-lg text-display-lg text-on-surface"><%= stats.completedResponses %></h4>
+                    </div>
+                </div>
+
+                <!-- Pending Answers -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 flex flex-col justify-between shadow-sm hover-scale">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-error-container/40 flex items-center justify-center text-error">
+                            <span class="material-symbols-outlined text-2xl">hourglass_empty</span>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Pending Answers</p>
+                        <h4 class="font-display-lg text-display-lg text-on-surface text-error"><%= stats.pendingResponses %></h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Double Column Layout -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-gutter">
+                <!-- Column 1: Live Activity Stream (Main Interaction Status) -->
+                <div class="xl:col-span-2 space-y-gutter">
+                    <!-- Live Tracking Widget Card -->
+                    <div class="bg-white border border-outline-variant/30 rounded-2xl shadow-sm overflow-hidden p-6 relative">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20"></div>
+
+                        <% if (activePoll) { %>
+                            <%
+                              let respondedCount = activePoll.responses.length;
+                              let targetCount = activePoll.targetStudents.length;
+                              let percentage = targetCount > 0 ? Math.round((respondedCount / targetCount) * 100) : 0;
+                            %>
+                            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                                <div class="space-y-3 flex-1">
+                                    <div class="flex items-center gap-2 text-error animate-pulse">
+                                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">live_tv</span>
+                                        <span class="font-label-md text-label-md uppercase font-bold tracking-wider">Live Broadcast Interaction</span>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-on-surface leading-snug"><%= activePoll.question %></h4>
+                                    <div class="text-sm text-on-surface-variant flex flex-wrap items-center gap-3 font-medium">
+                                        <span class="px-2 py-0.5 bg-surface-container rounded border border-outline-variant/20 font-mono text-xs"><%= activePoll.classroom.name %></span>
+                                        <span>•</span>
+                                        <span>Targeting <%= targetCount %> Students</span>
+                                    </div>
+                                </div>
+
+                                <!-- Circular Chart -->
+                                <div class="relative w-36 h-36 flex items-center justify-center shrink-0">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="40" stroke="#eceef2" stroke-width="8" fill="transparent" />
+                                        <circle cx="50" cy="50" r="40" stroke="#005bbf" stroke-width="8" fill="transparent"
+                                                stroke-dasharray="251.2" stroke-dashoffset="<%= 251.2 - (251.2 * percentage) / 100 %>"
+                                                stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                    </svg>
+                                    <div class="absolute flex flex-col items-center justify-center text-center">
+                                        <span class="text-2xl font-bold text-on-surface leading-none"><%= percentage %>%</span>
+                                        <span class="text-[10px] text-on-surface-variant uppercase tracking-wider mt-1 font-bold">Voted</span>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-12 flex flex-col items-center gap-4">
+                                <span class="material-symbols-outlined text-[48px] text-on-surface-variant/30">sensors_off</span>
+                                <div>
+                                    <h5 class="text-lg font-bold text-on-surface">No Active Classroom Polls</h5>
+                                    <p class="text-on-surface-variant text-sm mt-1">Deploy a poll to view live student engagement streams in real-time.</p>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Answer Submissions Table -->
+                    <div class="bg-white border border-outline-variant/30 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                        <div class="p-6 border-b border-outline-variant/30">
+                            <h5 class="text-lg font-bold text-on-surface">Live Responses Log</h5>
+                            <p class="text-on-surface-variant text-sm">Track real-time answer choices as they are submitted</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-surface-container-high/30">
+                                        <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Student Name</th>
+                                        <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">SEC ID</th>
+                                        <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Selected Option</th>
+                                        <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Response Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-outline-variant/10">
+                                    <% if (!activePoll || activePoll.responses.length === 0) { %>
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-8 text-center text-on-surface-variant italic">Waiting for submissions...</td>
+                                        </tr>
+                                    <% } else { %>
+                                        <% activePoll.responses.forEach(res => { %>
+                                            <tr class="hover:bg-primary-container/5 transition-colors">
+                                                <td class="px-6 py-4 font-semibold text-on-surface"><%= res.student.name %></td>
+                                                <td class="px-6 py-4 font-code text-xs text-on-surface-variant"><%= res.student.secId %></td>
+                                                <td class="px-6 py-4 text-primary font-medium text-sm"><%= res.selectedOption %></td>
+                                                <td class="px-6 py-4 text-on-surface-variant font-code text-xs"><%= new Date(res.timestamp).toLocaleTimeString() %></td>
+                                            </tr>
+                                        <% }) %>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Accountability List (Non-Respondents Grid) -->
+                <div class="space-y-gutter">
+                    <div class="bg-white border border-outline-variant/30 rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
+                        <div class="p-6 border-b border-outline-variant/30 flex justify-between items-center">
+                            <div>
+                                <h5 class="text-lg font-bold text-on-surface">Accountability List</h5>
+                                <p class="text-on-surface-variant text-xs">Students targeted who haven't responded yet</p>
+                            </div>
+                            <% if (activePoll) { %>
+                                <button onclick="nudgeAllPending('<%= activePoll._id %>')" class="px-3 py-1.5 bg-error-container text-on-error-container text-xs font-bold rounded-lg hover:brightness-95 transition-all">Nudge All</button>
+                            <% } %>
+                        </div>
+
+                        <div class="p-4 space-y-sm flex-1 overflow-y-auto max-h-[480px]">
+                            <% if (!activePoll) { %>
+                                <p class="text-sm italic text-on-surface-variant text-center py-6">No active poll to track accountability.</p>
+                            <% } else { %>
+                                <%
+                                  const answeredIds = activePoll.responses.map(r => r.student._id.toString());
+                                  const pendingStudents = activePoll.targetStudents.filter(s => !answeredIds.includes(s._id.toString()));
+                                %>
+                                <% if (pendingStudents.length === 0) { %>
+                                    <div class="text-center py-6">
+                                        <span class="material-symbols-outlined text-green-600 text-3xl">task_alt</span>
+                                        <p class="text-sm font-semibold text-on-surface mt-2">100% Student Participation!</p>
+                                    </div>
+                                <% } else { %>
+                                    <% pendingStudents.forEach(student => { %>
+                                        <div class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container transition-all border border-outline-variant/10">
+                                            <div class="space-y-0.5">
+                                                <p class="text-sm font-semibold text-on-surface"><%= student.name %></p>
+                                                <p class="text-xs text-on-surface-variant font-code"><%= student.secId %></p>
+                                            </div>
+                                            <button id="nudge-<%= student._id %>" onclick="nudgeStudentSingle('<%= activePoll._id %>', '<%= student._id %>')" class="flex items-center gap-1 px-3 py-1.5 bg-primary-container text-on-primary-container text-xs font-bold rounded-lg hover:shadow-sm active:scale-95 transition-all">
+                                                <span class="material-symbols-outlined text-xs">notifications_active</span> Nudge
+                                            </button>
+                                        </div>
+                                    <% }) %>
+                                <% } %>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function nudgeStudentSingle(pollId, studentId) {
+            const btn = document.getElementById(`nudge-${studentId}`);
+            btn.innerHTML = `<span class="material-symbols-outlined text-xs animate-spin">refresh</span> Nudging...`;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/polls/${pollId}/nudge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId })
+                });
+
+                if (res.ok) {
+                    btn.className = "flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-lg pointer-events-none";
+                    btn.innerHTML = `<span class="material-symbols-outlined text-xs">check</span> Nudged!`;
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span class="material-symbols-outlined text-xs">notifications_active</span> Nudge`;
+                }
+            } catch(e) {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-symbols-outlined text-xs">notifications_active</span> Nudge`;
+            }
+        }
+
+        async function nudgeAllPending(pollId) {
+            try {
+                const res = await fetch(`/api/polls/${pollId}/nudge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ all: true })
+                });
+                if (res.ok) {
+                    alert('All pending students have been nudged.');
+                    const nudgeButtons = document.querySelectorAll('[id^="nudge-"]');
+                    nudgeButtons.forEach(btn => {
+                        btn.className = "flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-lg pointer-events-none";
+                        btn.innerHTML = `<span class="material-symbols-outlined text-xs">check</span> Nudged!`;
+                    });
+                }
+            } catch(e) {}
+        }
+    </script>
+</body>
+</html>

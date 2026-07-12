@@ -1,0 +1,222 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Navigation Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <!-- Main Content Canvas -->
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px] min-h-screen">
+        <div class="max-w-[1440px] mx-auto w-full space-y-xl animate-fade-in">
+            <!-- Header Section -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="font-headline-lg text-headline-lg text-on-surface">Students Directory</h3>
+                    <p class="text-on-surface-variant font-body-md">Register, audit activity logs, and configure classroom enrollments</p>
+                </div>
+                <a href="/faculty/students/register" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all hover:scale-105">
+                    <span class="material-symbols-outlined text-sm">person_add</span> Register Student
+                </a>
+            </div>
+
+            <!-- Table Card Container -->
+            <div class="bg-white border border-outline-variant/30 rounded-2xl overflow-hidden flex flex-col shadow-sm">
+                <!-- Search & Filters Toolbar -->
+                <div class="p-4 border-b border-outline-variant/20 flex flex-col sm:flex-row gap-4 items-center justify-between bg-surface-container-low/50">
+                    <div class="relative w-full sm:w-72">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-sm">search</span>
+                        <input type="text" id="studentsSearch" onkeyup="filterStudents()" placeholder="Search name or ID..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-outline-variant/50 bg-white text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary border transition-all">
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant shrink-0">Filter Classroom:</label>
+                        <select id="classroomFilter" onchange="filterStudents()" class="w-full sm:w-48 px-3 py-2 rounded-xl border border-outline-variant/50 bg-white text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                            <option value="ALL">All Classrooms</option>
+                            <!-- Extract unique classroom list from students array -->
+                            <% 
+                              const uniqueClassrooms = [];
+                              students.forEach(s => {
+                                if (s.classroom && !uniqueClassrooms.some(c => c._id.toString() === s.classroom._id.toString())) {
+                                  uniqueClassrooms.push(s.classroom);
+                                }
+                              });
+                            %>
+                            <% uniqueClassrooms.forEach(room => { %>
+                                <option value="<%= room.name %>"><%= room.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="studentsTable">
+                        <thead>
+                            <tr class="bg-surface-container-high/30">
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Name</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Student ID</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Classroom</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20">Details</th>
+                                <th class="px-6 py-4 font-label-md text-on-surface-variant border-b border-outline-variant/20 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                            <% if (students.length === 0) { %>
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-on-surface-variant italic bg-white">No registered students found</td>
+                                </tr>
+                            <% } else { %>
+                                <% students.forEach(student => { 
+                                  const isMentee = menteeIds && menteeIds.includes(student._id.toString());
+                                %>
+                                    <tr class="hover:bg-primary-container/5 transition-colors student-row" data-classroom="<%= student.classroom ? student.classroom.name : 'None' %>">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary border border-outline-variant/20">
+                                                    <%= student.name.charAt(0) %>
+                                                </div>
+                                                <div>
+                                                    <p class="font-semibold text-on-surface text-sm flex items-center gap-1.5">
+                                                        <%= student.name %>
+                                                        <% if (isMentee) { %>
+                                                        <span class="px-1.5 py-0.5 bg-tertiary/10 text-tertiary text-[9px] font-bold rounded-full border border-tertiary/20 tracking-wider uppercase">Mentee</span>
+                                                        <% } %>
+                                                    </p>
+                                                    <span class="text-[10px] px-1.5 py-0.5 bg-surface-container text-on-surface-variant rounded border border-outline-variant/20 font-bold uppercase tracking-wider"><%= student.status %></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 font-code text-xs text-on-surface-variant font-bold"><%= student.secId %></td>
+                                        <td class="px-6 py-4 font-semibold text-primary text-sm">
+                                            <%= student.classroom ? `${student.classroom.name} (${student.classroom.subject})` : 'Unassigned' %>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs text-on-surface-variant font-medium leading-relaxed">
+                                            <div><%= student.department %> • <%= student.year %> • Sec <%= student.section %></div>
+                                            <div class="text-[10px] text-on-surface-variant/80 mt-1">Gender: <%= student.gender || 'Male' %> • <%= student.email || 'No email' %></div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <% if (isMentee) { %>
+                                                <button onclick="toggleMentee('<%= student._id %>', false, this)" title="Remove as Mentee"
+                                                    class="p-2 text-tertiary hover:bg-tertiary/10 rounded-xl transition-all inline-flex items-center gap-1 text-xs font-bold border border-tertiary/20">
+                                                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1">group_remove</span>
+                                                    <span class="hidden sm:inline">Mentee</span>
+                                                </button>
+                                                <% } else { %>
+                                                <button onclick="toggleMentee('<%= student._id %>', true, this)" title="Add as Mentee"
+                                                    class="p-2 text-on-surface-variant hover:text-tertiary hover:bg-tertiary/10 rounded-xl transition-all inline-flex items-center gap-1 text-xs font-bold border border-outline-variant/20">
+                                                    <span class="material-symbols-outlined text-sm">group_add</span>
+                                                    <span class="hidden sm:inline">Add Mentee</span>
+                                                </button>
+                                                <% } %>
+                                                <button onclick="confirmDeleteStudent('<%= student._id %>', '<%= student.name %>')" class="p-2 text-error hover:bg-error-container/20 rounded-xl transition-all inline-flex items-center justify-center">
+                                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Delete Validation Modal Backdrop -->
+    <div id="deleteStudentModal" class="fixed inset-0 overflow-y-auto z-50 hidden" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div onclick="toggleDeleteModal(false)" class="fixed inset-0 bg-inverse-surface/30 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-outline-variant/30">
+                <div class="px-6 py-4 border-b border-outline-variant/20 flex justify-between items-center bg-error-container/10">
+                    <h3 class="text-lg font-bold text-error flex items-center gap-2">
+                        <span class="material-symbols-outlined">warning</span> Verify Student Deletion
+                    </h3>
+                    <button onclick="toggleDeleteModal(false)" class="rounded-md text-on-surface-variant hover:text-on-surface outline-none">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <p class="text-sm text-on-surface-variant leading-relaxed">
+                        Are you sure you want to permanently remove <strong id="deleteStudentName" class="text-on-surface">Student</strong> from the registry? This action will automatically delete their active session status and cannot be undone.
+                    </p>
+                    <input type="hidden" id="deleteStudentId">
+                </div>
+
+                <div class="flex justify-end items-center gap-3 p-6 border-t border-outline-variant/20">
+                    <button onclick="toggleDeleteModal(false)" class="px-5 py-2.5 border border-outline-variant text-on-surface-variant font-semibold rounded-xl hover:bg-surface-container transition-all">Cancel</button>
+                    <button onclick="executeStudentDelete()" class="px-5 py-2.5 bg-error text-white font-semibold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-md">Confirm Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function toggleMentee(studentId, add, btn) {
+            const method = add ? 'POST' : 'DELETE';
+            try {
+                const res = await fetch(`/api/students/${studentId}/mentee`, { method });
+                const data = await res.json();
+                if (res.ok) {
+                    // Reload to refresh badges
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'Failed to update mentee status.');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Connection error.');
+            }
+        }
+
+        function toggleDeleteModal(open) {
+            const modal = document.getElementById('deleteStudentModal');
+            modal.classList.toggle('hidden', !open);
+        }
+
+        function confirmDeleteStudent(id, name) {
+            document.getElementById('deleteStudentId').value = id;
+            document.getElementById('deleteStudentName').innerText = name;
+            toggleDeleteModal(true);
+        }
+
+        async function executeStudentDelete() {
+            const id = document.getElementById('deleteStudentId').value;
+            try {
+                const response = await fetch(`/api/students/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to remove student from repository');
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function filterStudents() {
+            const query = document.getElementById('studentsSearch').value.toLowerCase().trim();
+            const classroom = document.getElementById('classroomFilter').value;
+            const rows = document.querySelectorAll('.student-row');
+
+            rows.forEach(row => {
+                const txt = row.innerText.toLowerCase();
+                const rowClassroom = row.getAttribute('data-classroom');
+
+                const matchesQuery = txt.includes(query);
+                const matchesClassroom = classroom === 'ALL' || rowClassroom === classroom;
+
+                if (matchesQuery && matchesClassroom) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

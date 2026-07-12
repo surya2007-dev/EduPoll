@@ -1,0 +1,56 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Navigation Shared Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <!-- Main Content Canvas -->
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px] min-h-screen flex items-center justify-center">
+        <!-- Help Card Container -->
+        <section class="w-full max-w-xl bg-white border border-outline-variant/30 rounded-2xl shadow-xl overflow-hidden p-0 hover-scale animate-fade-in">
+            <!-- Header Banner -->
+            <div class="px-8 py-5 border-b border-outline-variant/20 flex justify-between items-center bg-surface-container-low/50">
+                <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">help</span> Academic Help & Support
+                </h3>
+                <a href="/faculty/dashboard" class="text-on-surface-variant hover:text-on-surface transition-all">
+                    <span class="material-symbols-outlined">close</span>
+                </a>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-8 text-center space-y-6">
+                <div class="w-16 h-16 rounded-full bg-primary-container/10 border border-primary/10 flex items-center justify-center text-primary mx-auto shadow-sm">
+                    <span class="material-symbols-outlined text-[32px]">mail</span>
+                </div>
+                
+                <div class="space-y-2">
+                    <h4 class="text-xl font-bold text-on-surface">Submit Support Query</h4>
+                    <p class="text-sm text-on-surface-variant leading-relaxed max-w-sm mx-auto">
+                        For any queries, feedback, operational requests, or technical support, please contact the EduPoll helpdesk.
+                    </p>
+                </div>
+
+                <!-- Professional details -->
+                <div class="p-4 bg-surface-container rounded-xl border border-outline-variant/30 max-w-md mx-auto text-left space-y-2">
+                    <p class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Default Support Channel</p>
+                    <p class="text-sm font-semibold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-primary">alternate_email</span>
+                        str122515@gmail.com
+                    </p>
+                    <p class="text-xs text-on-surface-variant/80">Support queries are usually processed within 24 hours.</p>
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row justify-center items-center gap-3">
+                    <a href="/faculty/dashboard" class="w-full sm:w-auto px-5 py-2.5 border border-outline-variant text-on-surface-variant font-semibold rounded-xl hover:bg-surface-container transition-all">
+                        Back to Dashboard
+                    </a>
+                    <a href="mailto:str122515@gmail.com?subject=EduPoll%20Support%20Request&body=Hello%20Support%20Team," class="w-full sm:w-auto px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm">mail</span> Send Email
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

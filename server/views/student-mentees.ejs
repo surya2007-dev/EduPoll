@@ -1,0 +1,220 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+
+    <!-- Student Portal Header -->
+    <header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-surface/85 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+        <div class="flex items-center gap-4">
+            <span class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span> EduPoll
+            </span>
+            <div class="hidden md:flex gap-6 items-center ml-8 border-l border-outline-variant/20 pl-6">
+                <span class="text-sm font-semibold text-on-surface">Mentorship Group</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="/student/polls" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
+                <span class="material-symbols-outlined text-xs">poll</span> Polls
+            </a>
+            <a href="/student/history" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
+                <span class="material-symbols-outlined text-xs">history</span> Poll History
+            </a>
+            <a href="/messages" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
+                <span class="material-symbols-outlined text-xs">chat</span> Messages
+            </a>
+            <!-- User Profile Menu (Logo + Name ONLY, no SEC ID) -->
+            <div class="relative">
+                <button onclick="toggleStudentUserMenu(event)" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-surface-container-low border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+                    <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs shadow-sm">
+                        <%= user ? user.name.charAt(0) : 'S' %>
+                    </div>
+                    <span class="text-sm font-semibold text-on-surface"><%= user ? user.name : 'Student' %></span>
+                    <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="studentUserMenu" class="hidden absolute right-0 mt-2 w-52 bg-white border border-outline-variant/60 rounded-2xl shadow-xl py-2 z-50 animate-fade-in">
+                    <div class="px-4 py-2 border-b border-outline-variant/30 mb-1">
+                        <p class="text-xs font-bold text-on-surface"><%= user ? user.name : 'Student' %></p>
+                        <p class="text-[11px] text-on-surface-variant truncate"><%= user ? user.email : '' %></p>
+                    </div>
+                    <a href="/student/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-all">
+                        <span class="material-symbols-outlined text-base">person</span> My Profile
+                    </a>
+                    <a href="/api/auth/logout" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 transition-all">
+                        <span class="material-symbols-outlined text-base">logout</span> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop min-h-screen">
+        <div class="max-w-[1200px] mx-auto w-full space-y-xl animate-fade-in">
+
+            <% if (!mentor) { %>
+            <!-- No Mentor Assigned State -->
+            <div class="bg-white border border-outline-variant/30 rounded-2xl p-16 shadow-sm text-center max-w-lg mx-auto">
+                <div class="w-20 h-20 rounded-2xl bg-outline-variant/10 flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-[40px] text-outline-variant">person_off</span>
+                </div>
+                <h4 class="font-bold text-on-surface text-lg">No Mentor Assigned Yet</h4>
+                <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">Your faculty hasn't assigned you to a mentorship group yet. Once assigned, you'll be able to see your mentor and fellow mentees here.</p>
+                <a href="/student/polls" class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-sm shadow hover:brightness-110">
+                    <span class="material-symbols-outlined text-sm">poll</span> Back to Polls
+                </a>
+            </div>
+            <% } else { %>
+
+            <!-- Header -->
+            <div>
+                <h3 class="font-headline-lg text-headline-lg text-on-surface flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center">
+                        <span class="material-symbols-outlined">group</span>
+                    </span>
+                    Mentor & Mentee Community
+                </h3>
+                <p class="text-on-surface-variant font-body-md mt-1">Your assigned mentor and fellow mentee group members.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- My Mentor Card -->
+                <div class="lg:col-span-1">
+                    <h4 class="font-bold text-on-surface mb-4 text-base flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">co_present</span> My Mentor
+                    </h4>
+                    <div class="bg-white border-2 border-primary/20 rounded-2xl p-6 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
+                        <!-- Decorative background -->
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+
+                        <div class="flex items-center gap-4 relative">
+                            <div class="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-2xl border border-primary/20">
+                                <%= mentor.name.charAt(0) %>
+                            </div>
+                            <div>
+                                <p class="font-bold text-on-surface text-base"><%= mentor.name %></p>
+                                <span class="text-[10px] px-2 py-0.5 bg-primary/10 text-primary font-bold rounded-full border border-primary/20 uppercase tracking-wider">Faculty Mentor</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 space-y-2">
+                            <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                                <span class="material-symbols-outlined text-sm text-primary/50">school</span>
+                                <span><%= mentor.department %></span>
+                            </div>
+                            <% if (mentor.email) { %>
+                            <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                                <span class="material-symbols-outlined text-sm text-primary/50">email</span>
+                                <span class="truncate"><%= mentor.email %></span>
+                            </div>
+                            <% } %>
+                            <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                                <span class="material-symbols-outlined text-sm text-primary/50">badge</span>
+                                <span class="font-code font-bold"><%= mentor.secId %></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-outline-variant/10">
+                            <a href="/messages" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-semibold text-sm hover:brightness-110 transition-all">
+                                <span class="material-symbols-outlined text-sm">send</span> Message Mentor
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right side: Fellow Mentees + Group Messages -->
+                <div class="lg:col-span-2 space-y-6">
+
+                    <!-- Fellow Mentees -->
+                    <div>
+                        <h4 class="font-bold text-on-surface mb-4 text-base flex items-center gap-2">
+                            <span class="material-symbols-outlined text-tertiary text-lg">people</span> Fellow Mentees
+                            <span class="ml-1 px-2 py-0.5 bg-tertiary/10 text-tertiary text-xs font-bold rounded-full"><%= fellowMentees.length %></span>
+                        </h4>
+
+                        <% if (fellowMentees.length === 0) { %>
+                        <div class="bg-white border border-outline-variant/30 rounded-2xl p-8 shadow-sm text-center">
+                            <span class="material-symbols-outlined text-[40px] text-outline-variant/40">group_off</span>
+                            <p class="text-sm text-on-surface-variant mt-2">You are currently the only mentee in this group.</p>
+                        </div>
+                        <% } else { %>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <% fellowMentees.forEach(peer => { %>
+                            <div class="bg-white border border-outline-variant/30 rounded-xl p-4 shadow-sm flex items-center gap-3 hover:border-tertiary/30 hover:bg-tertiary/5 transition-all">
+                                <div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center font-bold text-on-surface-variant border border-outline-variant/20">
+                                    <%= peer.name.charAt(0) %>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-on-surface text-sm truncate"><%= peer.name %></p>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-[10px] font-code text-on-surface-variant"><%= peer.secId %></span>
+                                        <span class="text-outline-variant/50">•</span>
+                                        <span class="text-[10px] text-on-surface-variant"><%= peer.year %></span>
+                                    </div>
+                                </div>
+                                <span class="w-2 h-2 rounded-full shrink-0 <%= peer.status === 'In Session' ? 'bg-green-400' : 'bg-outline-variant' %>"></span>
+                            </div>
+                            <% }) %>
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Mentor Group Messages -->
+                    <div>
+                        <h4 class="font-bold text-on-surface mb-4 text-base flex items-center gap-2">
+                            <span class="material-symbols-outlined text-tertiary text-lg">mark_chat_unread</span> Group Messages from Mentor
+                        </h4>
+                        <div class="bg-white border border-outline-variant/30 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="p-3 bg-tertiary/5 border-b border-outline-variant/10 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-tertiary text-sm">campaign</span>
+                                <span class="text-xs text-on-surface-variant font-semibold">Messages broadcast to your mentee group</span>
+                            </div>
+                            <div class="divide-y divide-outline-variant/10 max-h-64 overflow-y-auto">
+                                <% if (menteeMessages.length === 0) { %>
+                                <div class="p-8 text-center">
+                                    <span class="material-symbols-outlined text-[40px] text-outline-variant/40">inbox</span>
+                                    <p class="text-xs text-on-surface-variant mt-2 italic">No group messages yet from your mentor.</p>
+                                </div>
+                                <% } else { %>
+                                <% menteeMessages.forEach(msg => { %>
+                                <div class="p-4 hover:bg-surface-container-low/50 transition-colors">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-tertiary text-sm">group</span>
+                                            <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Mentee Broadcast</span>
+                                        </div>
+                                        <span class="text-[10px] text-on-surface-variant shrink-0">
+                                            <%= new Date(msg.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) %>
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-on-surface leading-relaxed mt-2"><%= msg.content %></p>
+                                </div>
+                                <% }) %>
+                                <% } %>
+                            </div>
+                            <div class="p-3 border-t border-outline-variant/10 bg-surface-container-lowest/30">
+                                <a href="/messages" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">open_in_new</span> View all in Messages
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </main>
+
+    <script>
+        function toggleStudentUserMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('studentUserMenu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+        document.addEventListener('click', () => {
+            const menu = document.getElementById('studentUserMenu');
+            if (menu && !menu.classList.contains('hidden')) menu.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
