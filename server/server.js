@@ -23,6 +23,7 @@ const {
 } = require('./middleware/validation');
 const { auditLog } = require('./middleware/logger');
 const app = express();
+app.set('trust proxy', 1);
 app.disable('x-powered-by');
 const PORT = process.env.PORT || 3000;
 
@@ -194,42 +195,33 @@ app.use((req, res, next) => {
     return next();
   }
 
-  function getNormalizedOrigin(urlString) {
-    if (!urlString || typeof urlString !== 'string') return null;
-    try {
-      const parsed = new URL(urlString);
-      return parsed.origin;
-    } catch (e) {
-      return null;
-    }
-  }
-
   const hostHeader = req.get('host');
   if (!hostHeader) {
     return res.status(403).json({ error: 'Invalid request origin.' });
   }
 
-  const expectedOrigin = getNormalizedOrigin(
-    process.env.APP_ORIGIN || `${req.protocol}://${hostHeader}`
-  );
-  if (!expectedOrigin) {
-    return res.status(403).json({ error: 'Invalid request origin.' });
+  function matchesHost(urlStr) {
+    if (!urlStr || typeof urlStr !== 'string') return false;
+    try {
+      const parsed = new URL(urlStr);
+      return parsed.host === hostHeader;
+    } catch (e) {
+      return false;
+    }
   }
 
   const originHeader = req.get('origin');
   const refererHeader = req.get('referer');
 
   if (originHeader) {
-    const requestOrigin = getNormalizedOrigin(originHeader);
-    if (!requestOrigin || requestOrigin !== expectedOrigin) {
+    if (!matchesHost(originHeader)) {
       return res.status(403).json({ error: 'Invalid request origin.' });
     }
     return next();
   }
 
   if (refererHeader) {
-    const requestOrigin = getNormalizedOrigin(refererHeader);
-    if (!requestOrigin || requestOrigin !== expectedOrigin) {
+    if (!matchesHost(refererHeader)) {
       return res.status(403).json({ error: 'Invalid request origin.' });
     }
     return next();
