@@ -49,6 +49,15 @@
                     <input type="text" id="pollQuestion" required placeholder="e.g. Have you completed today's homework?" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-md placeholder:text-outline-variant">
                 </div>
 
+                <!-- Poll Active Timer / Duration -->
+                <div class="space-y-1">
+                    <label class="font-label-md text-label-md text-on-surface-variant font-bold tracking-wide uppercase">Active Timer / Deadline Duration (Minutes) *</label>
+                    <div class="flex items-center gap-3">
+                        <input type="number" id="pollDurationMinutes" min="1" max="1440" value="15" required class="w-32 px-4 py-2.5 rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-md">
+                        <span class="text-sm font-medium text-on-surface-variant">minutes until poll session expires</span>
+                    </div>
+                </div>
+
                 <!-- Target Group Toggle -->
                 <div class="space-y-3">
                     <label class="font-label-md text-label-md text-on-surface-variant font-bold tracking-wide uppercase">Poll Target Group *</label>
@@ -302,11 +311,13 @@
             const errorBanner = document.getElementById('errorBanner');
             errorBanner.classList.add('hidden');
 
+            const durationMinutes = parseInt(document.getElementById('pollDurationMinutes').value, 10) || 15;
+
             try {
                 const response = await fetch('/api/polls', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type, classroom, question, options, targetStudents, targetGroup })
+                    body: JSON.stringify({ type, classroom, question, options, targetStudents, targetGroup, durationMinutes })
                 });
 
                 if (response.ok) {

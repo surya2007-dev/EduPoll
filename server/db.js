@@ -849,23 +849,30 @@ const db = {
   },
 
   findStudentActivePoll: async (classId, studentId) => {
+    const sId = studentId.toString();
     if (useMemory) {
-      const poll = memory.polls.find(p => {
+      const activePolls = memory.polls.filter(p => {
         const roomMatch = (p.classroom?._id || p.classroom) === classId;
-        const studentMatch = p.targetStudents.some(s => (s._id || s) === studentId);
+        const studentMatch = (p.targetStudents || []).some(s => (s._id || s).toString() === sId);
         return p.status === 'live' && roomMatch && studentMatch;
-      });
-      if (poll) {
+      }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      if (activePolls.length > 0) {
+        const unanswered = activePolls.find(p => !(p.responses || []).some(r => (r.student?._id || r.student).toString() === sId));
+        const poll = unanswered || activePolls[0];
         const room = typeof poll.classroom === 'string' ? memory.classrooms.find(c => c._id === poll.classroom) : poll.classroom;
         return { ...poll, classroom: room };
       }
       return null;
     }
-    return Poll.findOne({ 
+    const activePolls = await Poll.find({ 
       classroom: classId, 
       status: 'live',
       targetStudents: studentId
-    }).populate('classroom');
+    }).sort({ createdAt: -1 }).populate('classroom');
+    if (activePolls.length === 0) return null;
+    const unanswered = activePolls.find(p => !(p.responses || []).some(r => (r.student?._id || r.student).toString() === sId));
+    return unanswered || activePolls[0];
   },
 
   getStudentPollHistory: async (studentId) => {
@@ -899,13 +906,6 @@ const db = {
 
   createPoll: async (data) => {
     if (useMemory) {
-      // Auto close previous live polls
-      memory.polls.forEach(p => {
-        if ((p.classroom?._id || p.classroom) === data.classroom && p.status === 'live') {
-          p.status = 'completed';
-        }
-      });
-
       const room = memory.classrooms.find(c => c._id === data.classroom);
       
       let targets = [];
@@ -915,7 +915,7 @@ const db = {
         targets = data.targetStudents.map(id => memory.users.find(u => u._id === id));
       }
 
-      const duration = 45;
+      const duration = parseInt(data.durationMinutes, 10) || 15;
       const endsAt = new Date(Date.now() + duration * 60 * 1000);
 
       const newPoll = {
@@ -935,15 +935,13 @@ const db = {
       return newPoll;
     }
 
-    await Poll.updateMany({ classroom: data.classroom, status: 'live' }, { status: 'completed' });
-
     let actualTargetStudents = data.targetStudents;
     if (!data.targetStudents || data.targetStudents.length === 0) {
       const roomStudents = await User.find({ classroom: data.classroom, role: 'student' }).select('_id');
       actualTargetStudents = roomStudents.map(s => s._id);
     }
 
-    const duration = 45;
+    const duration = parseInt(data.durationMinutes, 10) || 15;
     const endsAt = new Date(Date.now() + duration * 60 * 1000);
 
     const newPoll = new Poll({

@@ -1046,7 +1046,7 @@ app.get('/faculty/polls/create', requireLogin, requireRole('faculty'), async (re
 
 // Create Poll API — updated to support 'mentees_only' targetGroup
 app.post('/api/polls', requireLogin, requireRole('faculty'), validatePollCreate, async (req, res) => {
-  const { type, classroom, question, options, targetStudents, targetGroup } = req.body;
+  const { type, classroom, question, options, targetStudents, targetGroup, durationMinutes } = req.body;
   if (!classroom || !question || !options || options.length < 2) {
     return res.status(400).json({ error: 'Question, Classroom, and at least 2 options are required.' });
   }
@@ -1083,7 +1083,15 @@ app.post('/api/polls', requireLogin, requireRole('faculty'), validatePollCreate,
       }
     }
 
-    const newPoll = await db.createPoll({ type, classroom, question, options, targetStudents: resolvedTargets, createdBy: req.user._id });
+    const newPoll = await db.createPoll({ 
+      type, 
+      classroom, 
+      question, 
+      options, 
+      targetStudents: resolvedTargets, 
+      createdBy: req.user._id,
+      durationMinutes: parseInt(durationMinutes, 10) || 15
+    });
     return res.json({ success: true, poll: newPoll });
   } catch (err) {
     console.error(err);
