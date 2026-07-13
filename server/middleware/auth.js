@@ -15,7 +15,7 @@ function requireLogin(req, res, next) {
 
 function requireRole(role) {
   return (req, res, next) => {
-    if (req.user && req.user.role === role) {
+    if (req.user && (req.user.role === role || req.user.role === 'admin')) {
       return next();
     }
     auditLog('AUTHORIZATION_DENIED', req, req.user?._id, req.user?.role, 'failure');
