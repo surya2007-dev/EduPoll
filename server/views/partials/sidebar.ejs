@@ -1,16 +1,24 @@
-<!-- SideNavBar Partial -->
-<aside class="hidden lg:flex flex-col fixed left-0 top-0 h-full p-4 bg-white/95 backdrop-blur-xl border-r border-outline-variant/20 shadow-lg w-64 z-40">
-    <div class="flex items-center gap-3 px-4 py-4 mb-2">
-        <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
+<!-- SideNavBar Partial & Mobile Drawer Overlay -->
+<div id="sidebarBackdrop" onclick="toggleAppSidebar(event)" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-45 hidden lg:hidden transition-opacity"></div>
+
+<aside id="mainSidebar" class="flex flex-col fixed left-0 top-0 h-full p-4 bg-white/95 backdrop-blur-xl border-r border-outline-variant/20 shadow-xl w-64 z-50 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+    <div class="flex items-center justify-between px-3 py-4 mb-2">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
+            </div>
+            <div>
+                <h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">EduPoll</h1>
+                <p class="font-label-md text-label-md text-on-surface-variant"><%= (user && user.role === 'admin') ? 'Enterprise Admin' : 'Faculty Portal' %></p>
+            </div>
         </div>
-        <div>
-            <h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">EduPoll</h1>
-            <p class="font-label-md text-label-md text-on-surface-variant"><%= (user && user.role === 'admin') ? 'Enterprise Admin' : 'Faculty Portal' %></p>
-        </div>
+        <!-- Hide / Collapse Button inside left column -->
+        <button onclick="toggleAppSidebar(event)" class="p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-primary rounded-lg transition-all flex items-center justify-center cursor-pointer" title="Hide Navigation Sidebar">
+            <span class="material-symbols-outlined text-xl">first_page</span>
+        </button>
     </div>
 
-    <nav class="mt-4 flex-1 flex flex-col gap-1.5 px-2">
+    <nav class="mt-4 flex-1 flex flex-col gap-1.5 px-2 overflow-y-auto">
         <% 
           const dashUrl = (user && user.role === 'admin') ? '/admin/dashboard' : '/faculty/dashboard';
           const classUrl = (user && user.role === 'admin') ? '/admin/classrooms' : '/faculty/classrooms';
@@ -78,3 +86,66 @@
         </a>
     </div>
 </aside>
+
+<script>
+function toggleAppSidebar(e) {
+    if (e) e.stopPropagation();
+    const sidebar = document.getElementById('mainSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const header = document.getElementById('topHeader');
+    const icon = document.getElementById('sidebarToggleIcon');
+
+    if (!sidebar) return;
+
+    const isMobile = window.innerWidth < 1024;
+
+    if (isMobile) {
+        // Mobile Drawer behavior
+        const isOpen = !sidebar.classList.contains('-translate-x-full');
+        if (isOpen) {
+            sidebar.classList.add('-translate-x-full');
+            if (backdrop) backdrop.classList.add('hidden');
+        } else {
+            sidebar.classList.remove('-translate-x-full');
+            if (backdrop) backdrop.classList.remove('hidden');
+        }
+    } else {
+        // Desktop Hide/Unhide behavior
+        const isHidden = sidebar.classList.contains('lg:-translate-x-full');
+        if (isHidden) {
+            // Unhide sidebar
+            sidebar.classList.remove('lg:-translate-x-full');
+            if (header) header.classList.add('lg:pl-[280px]');
+            document.querySelectorAll('main').forEach(m => m.classList.add('lg:pl-[280px]'));
+            if (icon) icon.textContent = 'menu_open';
+            localStorage.setItem('eduPollSidebarHidden', 'false');
+        } else {
+            // Hide sidebar
+            sidebar.classList.add('lg:-translate-x-full');
+            if (header) header.classList.remove('lg:pl-[280px]');
+            document.querySelectorAll('main').forEach(m => m.classList.remove('lg:pl-[280px]'));
+            if (icon) icon.textContent = 'menu';
+            localStorage.setItem('eduPollSidebarHidden', 'true');
+        }
+    }
+}
+
+// Ensure proper initial layout and persistence on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('mainSidebar');
+    const header = document.getElementById('topHeader');
+    const icon = document.getElementById('sidebarToggleIcon');
+    const isHidden = localStorage.getItem('eduPollSidebarHidden') === 'true';
+
+    if (window.innerWidth >= 1024) {
+        if (isHidden && sidebar) {
+            sidebar.classList.add('lg:-translate-x-full');
+            if (header) header.classList.remove('lg:pl-[280px]');
+            document.querySelectorAll('main').forEach(m => m.classList.remove('lg:pl-[280px]'));
+            if (icon) icon.textContent = 'menu';
+        } else if (icon) {
+            icon.textContent = 'menu_open';
+        }
+    }
+});
+</script>

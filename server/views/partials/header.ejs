@@ -1,6 +1,10 @@
 <!-- TopNavBar Partial -->
-<header class="fixed top-0 w-full z-45 flex justify-between items-center px-margin-desktop h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm lg:pl-[280px]">
-    <div class="flex items-center gap-8">
+<header id="topHeader" class="fixed top-0 w-full z-45 flex justify-between items-center px-4 md:px-8 h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm lg:pl-[280px] transition-all duration-300">
+    <div class="flex items-center gap-3">
+        <!-- Sidebar Toggle / Hamburger Button (Visible on both Mobile & Desktop) -->
+        <button onclick="toggleAppSidebar(event)" class="p-2 text-on-surface-variant hover:bg-surface-container-high hover:text-primary rounded-xl transition-all flex items-center justify-center cursor-pointer" title="Hide/Unhide Navigation Sidebar">
+            <span id="sidebarToggleIcon" class="material-symbols-outlined text-2xl">menu</span>
+        </button>
         <h2 class="font-headline-md text-headline-md font-bold text-primary lg:hidden">EduPoll</h2>
     </div>
     
