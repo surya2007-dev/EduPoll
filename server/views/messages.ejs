@@ -1,60 +1,12 @@
 <%- include('partials/head') %>
 <body class="bg-background min-h-screen">
     <!-- Shared layouts -->
-    <% if (user.role !== 'student') { %>
-        <%- include('partials/sidebar') %>
-        <%- include('partials/header') %>
-    <% } else { %>
-        <!-- Simple Top Header for Student Layout -->
-        <header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-surface/85 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
-            <div class="flex items-center gap-4">
-                <span class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span> EduPoll
-                </span>
-                <div class="hidden md:flex gap-6 items-center ml-8 border-l border-outline-variant/20 pl-6">
-                    <span class="text-sm font-semibold text-on-surface">Student Portal</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="/student/polls" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
-                    <span class="material-symbols-outlined text-xs">poll</span> Polls
-                </a>
-                <a href="/student/mentees" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-tertiary-container/10 transition-all text-xs font-bold text-tertiary rounded-xl">
-                    <span class="material-symbols-outlined text-xs">groups</span> Mentorship Group
-                </a>
-                <a href="/student/history" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
-                    <span class="material-symbols-outlined text-xs">history</span> Poll History
-                </a>
-                <!-- User Profile Menu (Logo + Name ONLY, no SEC ID) -->
-                <div class="relative">
-                    <button onclick="toggleStudentUserMenu(event)" class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-surface-container-low border border-transparent hover:border-outline-variant transition-all cursor-pointer">
-                        <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs shadow-sm">
-                            <%= user ? user.name.charAt(0) : 'S' %>
-                        </div>
-                        <span class="text-sm font-semibold text-on-surface"><%= user ? user.name : 'Student' %></span>
-                        <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
-                    </button>
-
-                    <!-- Dropdown Menu -->
-                    <div id="studentUserMenu" class="hidden absolute right-0 mt-2 w-52 bg-white border border-outline-variant/60 rounded-2xl shadow-xl py-2 z-50 animate-fade-in">
-                        <div class="px-4 py-2 border-b border-outline-variant/30 mb-1">
-                            <p class="text-xs font-bold text-on-surface"><%= user ? user.name : 'Student' %></p>
-                            <p class="text-[11px] text-on-surface-variant truncate"><%= user ? user.email : '' %></p>
-                        </div>
-                        <a href="/student/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-all">
-                            <span class="material-symbols-outlined text-base">person</span> My Profile
-                        </a>
-                        <a href="/api/auth/logout" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 transition-all">
-                            <span class="material-symbols-outlined text-base">logout</span> Logout
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </header>
-    <% } %>
+    <!-- Shared layouts -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
 
     <!-- Main Chat Workspace -->
-    <main class="pt-20 lg:pt-24 pb-20 px-margin-mobile md:px-margin-desktop <%= (user.role !== 'student') ? 'lg:pl-[280px]' : '' %> min-h-[calc(100vh-80px)] flex items-stretch">
+    <main class="pt-20 lg:pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px] transition-all duration-300 min-h-[calc(100vh-80px)] flex items-stretch">
         <div class="w-full max-w-[1440px] mx-auto bg-white border border-outline-variant/30 rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-[75vh] min-h-[500px]">
             
             <!-- Left Conversations Sidebar -->
