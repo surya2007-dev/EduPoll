@@ -323,9 +323,11 @@ app.post('/api/auth/login', broadLoginLimiter, credentialLoginLimiter, validateL
   }
 
   try {
+    const cleanSecId = secId.trim();
+    const secIdRegex = new RegExp(`^${cleanSecId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     const query = role === 'faculty' 
-      ? { secId: secId.trim(), role: { $in: ['faculty', 'admin'] } } 
-      : { secId: secId.trim(), role: 'student' };
+      ? { secId: secIdRegex, role: { $in: ['faculty', 'admin'] } } 
+      : { secId: secIdRegex, role: 'student' };
 
     const user = await db.findUser(query);
     let isMatch = false;

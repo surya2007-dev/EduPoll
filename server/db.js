@@ -76,16 +76,21 @@ const db = {
       useMemory = false;
 
       // Always ensure the Principal Administrator account exists so institutional setup can begin
-      const existingAdmin = await User.findOne({ secId: 'ADMINISTRATOR' });
-      if (!existingAdmin) {
-        await new User({
-          secId: 'ADMINISTRATOR',
-          password: 'admin123',
-          role: 'admin',
-          name: 'Principal Admin',
-          department: 'Administration'
-        }).save();
-        console.log('Preloaded default administrator account (ADMINISTRATOR) in MongoDB.');
+      try {
+        const existingAdmin = await User.findOne({ secId: 'ADMINISTRATOR' });
+        if (!existingAdmin) {
+          await new User({
+            secId: 'ADMINISTRATOR',
+            password: 'admin123',
+            role: 'admin',
+            name: 'Principal Admin',
+            email: 'admin@university.edu',
+            department: 'Administration'
+          }).save();
+          console.log('Preloaded default administrator account (ADMINISTRATOR) in MongoDB.');
+        }
+      } catch (adminSeedErr) {
+        console.error('Diagnostic: Failed to preload default administrator account:', adminSeedErr.message);
       }
 
       if (!isProduction) {
@@ -153,7 +158,13 @@ const db = {
     if (useMemory) {
       return memory.users.find(u => {
         if (query.email && u.email !== query.email) return false;
-        if (query.secId && u.secId !== query.secId) return false;
+        if (query.secId) {
+          if (query.secId instanceof RegExp) {
+            if (!query.secId.test(u.secId)) return false;
+          } else if (u.secId !== query.secId) {
+            return false;
+          }
+        }
         if (query.role) {
           if (typeof query.role === 'object' && query.role.$in) {
             if (!query.role.$in.includes(u.role)) return false;
