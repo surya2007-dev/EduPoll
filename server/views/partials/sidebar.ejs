@@ -1,103 +1,65 @@
 <!-- SideNavBar Partial -->
-<aside id="sidebar" class="fixed left-0 top-0 h-full p-md bg-surface/45 backdrop-blur-xl border-r border-outline-variant/20 shadow-lg w-64 z-40 transform -translate-x-full lg:translate-x-0 lg:flex flex-col transition-transform duration-200 ease-in-out" aria-hidden="true">
-    <div class="flex items-center gap-3 px-4 py-6">
-        <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
-        </div>
-        <div>
-            <h1 class="font-headline-md text-headline-md font-bold text-primary">EduPoll</h1>
-            <p class="font-label-md text-label-md text-on-surface-variant">Enterprise Admin</p>
-        </div>
+<aside class="hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white border-r border-gray-200 w-64 z-40">
+
+    <div class="px-6 py-6">
+        <h1 class="text-xl font-bold">EduPoll</h1>
+        <p class="text-sm text-gray-500">Navigation</p>
     </div>
 
-    <nav class="mt-8 flex-1 flex flex-col gap-1 px-2">
+    <nav class="flex-1 px-4 space-y-2">
+
         <% if (user && user.role === 'admin') { %>
-            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/admin/dashboard')) ? 'bg-primary-con[...]">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="font-label-md text-label-md">Dashboard</span>
+
+            <a href="/admin/dashboard" class="block px-4 py-3">
+                Dashboard
             </a>
-            <a href="/messages" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/messages')) ? 'bg-primary-c[...]">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined">chat</span>
-                    <span class="font-label-md text-label-md">Messages</span>
-                </div>
-                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
-                <span class="unread-badge-dot w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white animate-pulse" title="Unread messages"></span>
-                <% } %>
+
+            <a href="/messages" class="block px-4 py-3">
+                Messages
             </a>
+
         <% } else { %>
-            <a href="/faculty/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/dashboard')) ? 'bg-primary[...]">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="font-label-md text-label-md">Dashboard</span>
+
+            <a href="/faculty/dashboard" class="block px-4 py-3">
+                Dashboard
             </a>
-            <a href="/faculty/classrooms" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/classrooms')) ? 'bg-prima[...]">
-                <span class="material-symbols-outlined">school</span>
-                <span class="font-label-md text-label-md">Classrooms</span>
+
+            <a href="/faculty/classrooms" class="block px-4 py-3">
+                Classrooms
             </a>
-            <a href="/faculty/students" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/students')) ? 'bg-primary-c[...]">
-                <span class="material-symbols-outlined">person</span>
-                <span class="font-label-md text-label-md">Students</span>
+
+            <a href="/faculty/students" class="block px-4 py-3">
+                Students
             </a>
-            <a href="/faculty/mentees" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/mentees')) ? 'bg-tertiary-co[...]">
-                <span class="material-symbols-outlined">group</span>
-                <span class="font-label-md text-label-md">Mentees</span>
+
+            <a href="/faculty/mentees" class="block px-4 py-3">
+                Mentees
             </a>
-            <a href="/faculty/polls" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/polls')) ? 'bg-primary-contain[...]">
-                <span class="material-symbols-outlined">poll</span>
-                <span class="font-label-md text-label-md">Polls</span>
+
+            <a href="/faculty/polls" class="block px-4 py-3">
+                Polls
             </a>
-            <a href="/faculty/reports" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/reports')) ? 'bg-primary-con[...]">
-                <span class="material-symbols-outlined">analytics</span>
-                <span class="font-label-md text-label-md">Reports</span>
+
+            <a href="/faculty/reports" class="block px-4 py-3">
+                Reports
             </a>
-            <a href="/messages" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/messages')) ? 'bg-primary-c[...]">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined">chat</span>
-                    <span class="font-label-md text-label-md">Messages</span>
-                </div>
-                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
-                <span class="unread-badge-dot w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white animate-pulse" title="Unread messages"></span>
-                <% } %>
+
+            <a href="/messages" class="block px-4 py-3">
+                Messages
             </a>
+
         <% } %>
+
     </nav>
 
-    <div class="mt-auto px-2 pb-6 border-t border-outline-variant/10 pt-4">
-        <a href="/faculty/help" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/help')) ? 'bg-primary-container tex[...]">
-            <span class="material-symbols-outlined">help</span>
-            <span class="font-label-md text-label-md">Help</span>
+    <div class="px-4 pb-6">
+        <a href="/faculty/help" class="block px-4 py-3">
+            Help
         </a>
-        <a href="/api/auth/logout" class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-error-container/10 transition-all rounded-lg">
-            <span class="material-symbols-outlined text-error">logout</span>
-            <span class="font-label-md text-label-md text-error">Logout</span>
+
+        <a href="/api/auth/logout" class="block px-4 py-3">
+            Logout
         </a>
     </div>
+
 </aside>
-
-<div id="sidebar-overlay" class="fixed inset-0 bg-black/40 lg:hidden hidden z-30" aria-hidden="true"></div>
-
-<script>
-(function(){
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  function openSidebar(){
-    sidebar.classList.remove('-translate-x-full');
-    sidebar.setAttribute('aria-hidden','false');
-    overlay.classList.remove('hidden');
-  }
-  function closeSidebar(){
-    sidebar.classList.add('-translate-x-full');
-    sidebar.setAttribute('aria-hidden','true');
-    overlay.classList.add('hidden');
-  }
-  // Toggle via custom event
-  document.addEventListener('toggleSidebar', () => {
-    if (sidebar.classList.contains('-translate-x-full')) openSidebar(); else closeSidebar();
-  });
-  // Click overlay to close
-  overlay.addEventListener('click', closeSidebar);
-  // Expose functions for a header button to use: window.openSidebar() / window.closeSidebar()
-  window.openSidebar = openSidebar;
-  window.closeSidebar = closeSidebar;
-})();
-</script>
