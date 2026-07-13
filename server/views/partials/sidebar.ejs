@@ -1,5 +1,5 @@
 <!-- SideNavBar Partial -->
-<aside class="hidden lg:flex flex-col fixed left-0 top-0 h-full p-md bg-surface/45 backdrop-blur-xl border-r border-outline-variant/20 shadow-lg w-64 z-40">
+<aside id="sidebar" class="fixed left-0 top-0 h-full p-md bg-surface/45 backdrop-blur-xl border-r border-outline-variant/20 shadow-lg w-64 z-40 transform -translate-x-full lg:translate-x-0 lg:flex flex-col transition-transform duration-200 ease-in-out" aria-hidden="true">
     <div class="flex items-center gap-3 px-4 py-6">
         <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
@@ -12,11 +12,11 @@
 
     <nav class="mt-8 flex-1 flex flex-col gap-1 px-2">
         <% if (user && user.role === 'admin') { %>
-            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/admin/dashboard')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/admin/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/admin/dashboard')) ? 'bg-primary-con[...]">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="font-label-md text-label-md">Dashboard</span>
             </a>
-            <a href="/messages" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/messages')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/messages" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/messages')) ? 'bg-primary-c[...]">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined">chat</span>
                     <span class="font-label-md text-label-md">Messages</span>
@@ -26,31 +26,31 @@
                 <% } %>
             </a>
         <% } else { %>
-            <a href="/faculty/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/dashboard')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/faculty/dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/dashboard')) ? 'bg-primary[...]">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="font-label-md text-label-md">Dashboard</span>
             </a>
-            <a href="/faculty/classrooms" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/classrooms')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/faculty/classrooms" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/classrooms')) ? 'bg-prima[...]">
                 <span class="material-symbols-outlined">school</span>
                 <span class="font-label-md text-label-md">Classrooms</span>
             </a>
-            <a href="/faculty/students" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/students')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/faculty/students" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/students')) ? 'bg-primary-c[...]">
                 <span class="material-symbols-outlined">person</span>
                 <span class="font-label-md text-label-md">Students</span>
             </a>
-            <a href="/faculty/mentees" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/mentees')) ? 'bg-tertiary-container text-on-tertiary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/faculty/mentees" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/mentees')) ? 'bg-tertiary-co[...]">
                 <span class="material-symbols-outlined">group</span>
                 <span class="font-label-md text-label-md">Mentees</span>
             </a>
-            <a href="/faculty/polls" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/polls')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/faculty/polls" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/polls')) ? 'bg-primary-contain[...]">
                 <span class="material-symbols-outlined">poll</span>
                 <span class="font-label-md text-label-md">Polls</span>
             </a>
-            <a href="/faculty/reports" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/reports')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/faculty/reports" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/reports')) ? 'bg-primary-con[...]">
                 <span class="material-symbols-outlined">analytics</span>
                 <span class="font-label-md text-label-md">Reports</span>
             </a>
-            <a href="/messages" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/messages')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+            <a href="/messages" class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/messages')) ? 'bg-primary-c[...]">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined">chat</span>
                     <span class="font-label-md text-label-md">Messages</span>
@@ -63,7 +63,7 @@
     </nav>
 
     <div class="mt-auto px-2 pb-6 border-t border-outline-variant/10 pt-4">
-        <a href="/faculty/help" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/help')) ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high' %>">
+        <a href="/faculty/help" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all <%= (typeof path !== 'undefined' && path.startsWith('/faculty/help')) ? 'bg-primary-container tex[...]">
             <span class="material-symbols-outlined">help</span>
             <span class="font-label-md text-label-md">Help</span>
         </a>
@@ -73,3 +73,31 @@
         </a>
     </div>
 </aside>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/40 lg:hidden hidden z-30" aria-hidden="true"></div>
+
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  function openSidebar(){
+    sidebar.classList.remove('-translate-x-full');
+    sidebar.setAttribute('aria-hidden','false');
+    overlay.classList.remove('hidden');
+  }
+  function closeSidebar(){
+    sidebar.classList.add('-translate-x-full');
+    sidebar.setAttribute('aria-hidden','true');
+    overlay.classList.add('hidden');
+  }
+  // Toggle via custom event
+  document.addEventListener('toggleSidebar', () => {
+    if (sidebar.classList.contains('-translate-x-full')) openSidebar(); else closeSidebar();
+  });
+  // Click overlay to close
+  overlay.addEventListener('click', closeSidebar);
+  // Expose functions for a header button to use: window.openSidebar() / window.closeSidebar()
+  window.openSidebar = openSidebar;
+  window.closeSidebar = closeSidebar;
+})();
+</script>
