@@ -75,19 +75,20 @@ const db = {
       console.log('Connected to MongoDB database successfully.');
       useMemory = false;
 
+      // Always ensure the Principal Administrator account exists so institutional setup can begin
+      const existingAdmin = await User.findOne({ secId: 'ADMINISTRATOR' });
+      if (!existingAdmin) {
+        await new User({
+          secId: 'ADMINISTRATOR',
+          password: 'admin123',
+          role: 'admin',
+          name: 'Principal Admin',
+          department: 'Administration'
+        }).save();
+        console.log('Preloaded default administrator account (ADMINISTRATOR) in MongoDB.');
+      }
+
       if (!isProduction) {
-        // Seed Administrator
-        const existingAdmin = await User.findOne({ secId: 'ADMINISTRATOR' });
-        if (!existingAdmin) {
-          await new User({
-            secId: 'ADMINISTRATOR',
-            password: 'admin123',
-            role: 'admin',
-            name: 'Principal Admin',
-            department: 'Administration'
-          }).save();
-          console.log('Preloaded default administrator account in MongoDB (development mode).');
-        }
 
         // Seed Faculty
         const existingFaculty = await User.findOne({ secId: 'FAC001' });
