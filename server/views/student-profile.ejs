@@ -1,46 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - EduPoll Student Portal</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1E40AF',
-                        'primary-container': '#DBEAFE',
-                        'on-primary-container': '#1E3A8A',
-                        secondary: '#475569',
-                        tertiary: '#0F766E',
-                        'tertiary-container': '#CCFBF1',
-                        'on-tertiary-container': '#115E59',
-                        surface: '#F8FAFC',
-                        'surface-container-lowest': '#FFFFFF',
-                        'surface-container-low': '#F1F5F9',
-                        'on-surface': '#0F172A',
-                        'on-surface-variant': '#64748B',
-                        'outline-variant': '#E2E8F0',
-                        error: '#EF4444',
-                        'error-container': '#FEE2E2',
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        code: ['JetBrains Mono', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-surface font-sans text-on-surface min-h-screen flex flex-col">
+<%- include('partials/head') %>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
 
     <!-- Shared Sidebar and Header Partials -->
     <%- include('partials/sidebar') %>

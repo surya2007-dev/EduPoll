@@ -6,12 +6,8 @@
 
     <!-- Main Canvas -->
     <main class="w-full max-w-2xl px-margin-mobile md:px-margin-desktop pt-24 pb-32 flex flex-col items-center lg:pl-[280px] transition-all duration-300">
-        <!-- Live Status Bar -->
+        <!-- Title Bar -->
         <div class="w-full mb-8 flex flex-col items-center text-center">
-            <div class="flex items-center gap-2 px-3 py-1 bg-error-container text-on-error-container rounded-full mb-4 animate-pulse">
-                <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">live_tv</span>
-                <span class="font-label-md text-[10px] uppercase font-bold tracking-wider">Live Classroom Mode</span>
-            </div>
             <h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-extrabold mb-1">Interactive Engagement Panel</h1>
             <p class="font-body-md text-body-md text-on-surface-variant max-w-md">Respond to live questions deployed by your instructor to log session attendance.</p>
         </div>
@@ -100,21 +96,6 @@
             <% } %>
         </section>
 
-        <!-- Mobile Navigation Bottom Panel -->
-        <nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-white/80 backdrop-blur-lg border-t border-outline-variant/30 shadow-2xl">
-            <button onclick="window.location.reload();" class="flex flex-col items-center justify-center text-primary rounded-full px-4 py-1">
-                <span class="material-symbols-outlined">live_tv</span>
-                <span class="font-label-md text-[10px]">Live</span>
-            </button>
-            <button onclick="alert('Student poll activity log is archived automatically under local sessions history.')" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface rounded-full px-4 py-1">
-                <span class="material-symbols-outlined">history</span>
-                <span class="font-label-md text-[10px]">History</span>
-            </button>
-            <button onclick="alert('Student profile details: <%= user ? user.name : 'Unknown' %> in <%= user && user.classroom ? user.classroom.name : 'Unassigned Class' %>')" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface rounded-full px-4 py-1">
-                <span class="material-symbols-outlined">person</span>
-                <span class="font-label-md text-[10px]">Profile</span>
-            </button>
-        </nav>
     </main>
 
     <script>
