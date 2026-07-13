@@ -3,6 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function() {
+            try {
+                const theme = localStorage.getItem('eduPollTheme');
+                if (theme === 'dark') {
+                    document.documentElement.classList.remove('light');
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
+                }
+            } catch(e) {}
+        })();
+        function toggleAppTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            if (newTheme === 'dark') {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            }
+            try { localStorage.setItem('eduPollTheme', newTheme); } catch(e) {}
+            if (typeof updateThemeToggleUI === 'function') updateThemeToggleUI();
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -142,6 +169,62 @@
         /* Settings/Notifications overlay transition */
         .slide-over {
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        /* Comprehensive Dark Mode Support */
+        html.dark {
+            color-scheme: dark;
+        }
+        html.dark body {
+            background-color: #0f1115 !important;
+            color: #f0f2f8 !important;
+        }
+        html.dark aside,
+        html.dark header,
+        html.dark .bg-white,
+        html.dark .bg-surface,
+        html.dark .bg-surface\/80,
+        html.dark .bg-surface\/85,
+        html.dark .bg-surface\/90,
+        html.dark .bg-surface\/95,
+        html.dark .bg-white\/95 {
+            background-color: #161a22 !important;
+            color: #f0f2f8 !important;
+            border-color: #2a3140 !important;
+        }
+        html.dark .bg-surface-container,
+        html.dark .bg-surface-container-low,
+        html.dark .bg-surface-container-high {
+            background-color: #1e2430 !important;
+            color: #f0f2f8 !important;
+        }
+        html.dark .text-on-surface,
+        html.dark h1,
+        html.dark h2,
+        html.dark h3,
+        html.dark h4,
+        html.dark th {
+            color: #f0f2f8 !important;
+        }
+        html.dark .text-on-surface-variant,
+        html.dark p.text-on-surface-variant,
+        html.dark span.text-on-surface-variant {
+            color: #a3a9b8 !important;
+        }
+        html.dark .border-outline-variant,
+        html.dark .border-outline-variant\/20,
+        html.dark .border-outline-variant\/30,
+        html.dark .border-outline-variant\/50 {
+            border-color: #2a3140 !important;
+        }
+        html.dark table tbody tr:hover {
+            background-color: #1e2430 !important;
+        }
+        html.dark input,
+        html.dark select,
+        html.dark textarea {
+            background-color: #1e2430 !important;
+            color: #f0f2f8 !important;
+            border-color: #384154 !important;
         }
     </style>
 </head>

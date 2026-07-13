@@ -144,6 +144,23 @@ async function markAllNotificationsRead() {
                     </div>
                     <div class="relative mt-6 flex-1 px-4 sm:px-6 space-y-6">
                         <div class="space-y-3">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Appearance & Theme</h3>
+                            <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/20 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                        <span id="themeSettingIcon" class="material-symbols-outlined">light_mode</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-on-surface">Theme Mode</p>
+                                        <p class="text-xs text-on-surface-variant" id="themeSettingLabel">Light Mode (Default)</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="toggleAppTheme()" id="themeToggleBtn" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-gray-300" role="switch" aria-checked="false">
+                                    <span id="themeToggleThumb" class="pointer-events-none inline-block h-5 w-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-3 border-t border-outline-variant/20 pt-6">
                             <h3 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">General Options</h3>
                             <label class="flex items-center gap-3 cursor-pointer">
                                 <input type="checkbox" checked class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary">
@@ -204,11 +221,36 @@ async function markAllNotificationsRead() {
         }
     }
 
+    function updateThemeToggleUI() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const icon = document.getElementById('themeSettingIcon');
+        const label = document.getElementById('themeSettingLabel');
+        const btn = document.getElementById('themeToggleBtn');
+        const thumb = document.getElementById('themeToggleThumb');
+        if (!icon || !label || !btn || !thumb) return;
+        if (isDark) {
+            icon.textContent = 'dark_mode';
+            label.textContent = 'Dark Mode';
+            btn.classList.remove('bg-gray-300');
+            btn.classList.add('bg-primary');
+            thumb.classList.remove('translate-x-0');
+            thumb.classList.add('translate-x-5');
+        } else {
+            icon.textContent = 'light_mode';
+            label.textContent = 'Light Mode (Default)';
+            btn.classList.remove('bg-primary');
+            btn.classList.add('bg-gray-300');
+            thumb.classList.remove('translate-x-5');
+            thumb.classList.add('translate-x-0');
+        }
+    }
+
     // Toggle Settings slide over
     function toggleSettingsSlideOver(open) {
         const drawer = document.getElementById('settingsSlideOver');
         const panel = document.getElementById('settingsPanel');
         if (open) {
+            updateThemeToggleUI();
             drawer.classList.remove('hidden');
             setTimeout(() => {
                 panel.classList.remove('translate-x-full');
