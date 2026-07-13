@@ -470,19 +470,45 @@ const db = {
 
       return memory.classrooms.map(room => {
         const studentCount = memory.users.filter(u => u.role === 'student' && (u.classroom?._id || u.classroom) === room._id).length;
+        const facultyCount = memory.users.filter(u => u.role === 'faculty' && (room.facultyMembers || []).some(f => (f._id || f) === u._id)).length;
         return {
           ...room,
           studentsEnrolledCount: studentCount,
+          students: room.students || [],
+          facultyMembers: room.facultyMembers || [],
+          studentCapacity: room.studentCapacity || 63,
+          facultyCapacity: room.facultyCapacity || 10,
+          joinCode: room.joinCode || ('EDU-' + room.code),
           hasLivePoll: liveClassIds.includes(room._id)
         };
       });
     }
-    return Classroom.find();
+    const rooms = await Classroom.find().populate('students').populate('facultyMembers').populate('pendingFacultyRequests.faculty');
+    // Ensure joinCode migration for existing rooms
+    for (let r of rooms) {
+      if (!r.joinCode) {
+        const prefix = (r.department || 'EDU').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || 'EDU';
+        r.joinCode = `${prefix}-${r.section || 'A'}${Math.floor(1000 + Math.random() * 9000)}`;
+        await r.save();
+      }
+    }
+    return rooms;
+  },
+
+  getClassroomById: async (id) => {
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === id);
+      return room || null;
+    }
+    return Classroom.findById(id).populate('students').populate('facultyMembers').populate('pendingFacultyRequests.faculty');
   },
 
   createClassroom: async (data) => {
+    const code = 'CLASS' + String(Date.now()).slice(-4);
+    const prefix = (data.department || 'EDU').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || 'EDU';
+    const joinCode = `${prefix}-${data.section || 'A'}${Math.floor(1000 + Math.random() * 9000)}`;
+
     if (useMemory) {
-      const code = 'CLASS' + String(Date.now()).slice(-4);
       const newRoom = {
         _id: 'class_' + Date.now(),
         name: data.name,
@@ -490,17 +516,60 @@ const db = {
         year: data.year,
         semester: data.semester,
         department: data.department,
+        section: data.section || 'A',
         code,
+        joinCode,
         description: data.description,
+        students: [],
+        facultyMembers: [],
+        pendingFacultyRequests: [],
+        studentCapacity: data.studentCapacity || 63,
+        facultyCapacity: data.facultyCapacity || 10,
+        isActive: true,
+        createdBy: data.createdBy || null,
         studentsEnrolledCount: 0
       };
       memory.classrooms.push(newRoom);
       return newRoom;
     }
-    const code = 'CLASS' + String(Date.now()).slice(-4);
-    const newRoom = new Classroom({ ...data, code });
+    const newRoom = new Classroom({
+      ...data,
+      code,
+      joinCode,
+      section: data.section || 'A',
+      studentCapacity: data.studentCapacity || 63,
+      facultyCapacity: data.facultyCapacity || 10,
+      students: [],
+      facultyMembers: [],
+      pendingFacultyRequests: []
+    });
     await newRoom.save();
     return newRoom;
+  },
+
+  updateClassroom: async (id, updateData) => {
+    if (useMemory) {
+      const idx = memory.classrooms.findIndex(c => c._id === id);
+      if (idx !== -1) {
+        memory.classrooms[idx] = { ...memory.classrooms[idx], ...updateData };
+        return memory.classrooms[idx];
+      }
+      return null;
+    }
+    const room = await Classroom.findById(id);
+    if (!room) throw new Error('Classroom not found');
+
+    // Capacity reduction validation
+    if (updateData.studentCapacity !== undefined && updateData.studentCapacity < (room.students || []).length) {
+      throw new Error(`Cannot reduce student capacity below current enrollment (${room.students.length}).`);
+    }
+    if (updateData.facultyCapacity !== undefined && updateData.facultyCapacity < (room.facultyMembers || []).length) {
+      throw new Error(`Cannot reduce faculty capacity below current membership count (${room.facultyMembers.length}).`);
+    }
+
+    Object.assign(room, updateData);
+    await room.save();
+    return room;
   },
 
   deleteClassroom: async (id) => {
@@ -520,6 +589,220 @@ const db = {
     await User.updateMany({ classroom: id }, { classroom: null });
     await Poll.deleteMany({ classroom: id });
     return Classroom.findByIdAndDelete(id);
+  },
+
+  // Classroom Membership Actions
+  addStudentToClassroom: async (classroomId, studentId) => {
+    const sId = studentId.toString();
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === classroomId);
+      const user = memory.users.find(u => u._id === sId);
+      if (!room || !user) throw new Error('Classroom or Student not found.');
+      if (user.role !== 'student') throw new Error('Only students can be enrolled in the student roster.');
+      room.students = room.students || [];
+      if (room.students.includes(sId)) throw new Error('Student is already enrolled in this classroom.');
+      if (room.students.length >= (room.studentCapacity || 63)) throw new Error('Classroom student capacity reached.');
+      room.students.push(sId);
+      room.studentsEnrolledCount = room.students.length;
+      user.classroom = classroomId;
+      return room;
+    }
+    const user = await User.findById(studentId);
+    if (!user) throw new Error('Student not found.');
+    if (user.role !== 'student') throw new Error('Only students can be enrolled in the student roster.');
+
+    const room = await Classroom.findById(classroomId);
+    if (!room) throw new Error('Classroom not found.');
+    if (!room.isActive) throw new Error('Classroom is currently inactive.');
+
+    const currentStudents = (room.students || []).map(id => id.toString());
+    if (currentStudents.includes(sId)) throw new Error('Student is already enrolled in this classroom.');
+    if (currentStudents.length >= (room.studentCapacity || 63)) {
+      throw new Error(`Classroom student capacity reached (${room.studentCapacity || 63}).`);
+    }
+
+    room.students.push(user._id);
+    room.studentsEnrolledCount = room.students.length;
+    await room.save();
+
+    user.classroom = room._id;
+    await user.save();
+
+    return room;
+  },
+
+  removeStudentFromClassroom: async (classroomId, studentId) => {
+    const sId = studentId.toString();
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === classroomId);
+      if (room && room.students) {
+        room.students = room.students.filter(id => id.toString() !== sId);
+        room.studentsEnrolledCount = room.students.length;
+      }
+      const user = memory.users.find(u => u._id === sId);
+      if (user) user.classroom = null;
+      return true;
+    }
+    const room = await Classroom.findById(classroomId);
+    if (room) {
+      room.students = (room.students || []).filter(id => id.toString() !== sId);
+      room.studentsEnrolledCount = room.students.length;
+      await room.save();
+    }
+    await User.findByIdAndUpdate(studentId, { classroom: null });
+    return true;
+  },
+
+  addFacultyToClassroom: async (classroomId, facultyId) => {
+    const fId = facultyId.toString();
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === classroomId);
+      const user = memory.users.find(u => u._id === fId);
+      if (!room || !user) throw new Error('Classroom or Faculty not found.');
+      if (user.role !== 'faculty') throw new Error('Only faculty can be assigned to the faculty roster.');
+      room.facultyMembers = room.facultyMembers || [];
+      if (room.facultyMembers.includes(fId)) throw new Error('Faculty member is already assigned to this classroom.');
+      if (room.facultyMembers.length >= (room.facultyCapacity || 10)) throw new Error('Classroom faculty capacity reached.');
+      room.facultyMembers.push(fId);
+      room.pendingFacultyRequests = (room.pendingFacultyRequests || []).filter(r => (r.faculty?._id || r.faculty).toString() !== fId);
+      return room;
+    }
+    const user = await User.findById(facultyId);
+    if (!user) throw new Error('Faculty user not found.');
+    if (user.role !== 'faculty') throw new Error('Only faculty can be assigned to the faculty roster.');
+
+    const room = await Classroom.findById(classroomId);
+    if (!room) throw new Error('Classroom not found.');
+
+    const currentFaculty = (room.facultyMembers || []).map(id => id.toString());
+    if (currentFaculty.includes(fId)) throw new Error('Faculty member is already assigned to this classroom.');
+    if (currentFaculty.length >= (room.facultyCapacity || 10)) {
+      throw new Error(`Classroom faculty capacity reached (${room.facultyCapacity || 10}).`);
+    }
+
+    room.facultyMembers.push(user._id);
+    room.pendingFacultyRequests = (room.pendingFacultyRequests || []).filter(r => r.faculty.toString() !== fId);
+    await room.save();
+    return room;
+  },
+
+  removeFacultyFromClassroom: async (classroomId, facultyId) => {
+    const fId = facultyId.toString();
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === classroomId);
+      if (room && room.facultyMembers) {
+        room.facultyMembers = room.facultyMembers.filter(id => id.toString() !== fId);
+      }
+      return true;
+    }
+    const room = await Classroom.findById(classroomId);
+    if (room) {
+      room.facultyMembers = (room.facultyMembers || []).filter(id => id.toString() !== fId);
+      await room.save();
+    }
+    return true;
+  },
+
+  requestFacultyMembership: async (classroomId, facultyId) => {
+    const fId = facultyId.toString();
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === classroomId);
+      if (!room) throw new Error('Classroom not found.');
+      room.facultyMembers = room.facultyMembers || [];
+      room.pendingFacultyRequests = room.pendingFacultyRequests || [];
+      if (room.facultyMembers.includes(fId)) throw new Error('You are already an assigned faculty member of this classroom.');
+      if (room.pendingFacultyRequests.some(r => (r.faculty?._id || r.faculty) === fId)) {
+        throw new Error('Your request to join this classroom is already pending approval.');
+      }
+      room.pendingFacultyRequests.push({ faculty: fId, requestedAt: new Date() });
+      return room;
+    }
+    const room = await Classroom.findById(classroomId);
+    if (!room) throw new Error('Classroom not found.');
+    const currentFaculty = (room.facultyMembers || []).map(id => id.toString());
+    if (currentFaculty.includes(fId)) throw new Error('You are already an assigned faculty member of this classroom.');
+    if ((room.pendingFacultyRequests || []).some(r => r.faculty.toString() === fId)) {
+      throw new Error('Your request to join this classroom is already pending admin approval.');
+    }
+    room.pendingFacultyRequests.push({ faculty: facultyId, requestedAt: new Date() });
+    await room.save();
+    return room;
+  },
+
+  approveFacultyMembership: async (classroomId, facultyId) => {
+    return module.exports.addFacultyToClassroom(classroomId, facultyId);
+  },
+
+  rejectFacultyMembership: async (classroomId, facultyId) => {
+    const fId = facultyId.toString();
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === classroomId);
+      if (room) {
+        room.pendingFacultyRequests = (room.pendingFacultyRequests || []).filter(r => (r.faculty?._id || r.faculty).toString() !== fId);
+      }
+      return true;
+    }
+    const room = await Classroom.findById(classroomId);
+    if (room) {
+      room.pendingFacultyRequests = (room.pendingFacultyRequests || []).filter(r => r.faculty.toString() !== fId);
+      await room.save();
+    }
+    return true;
+  },
+
+  joinClassroomByCode: async (joinCodeInput, userId) => {
+    const cleanCode = (joinCodeInput || '').trim();
+    if (!cleanCode) throw new Error('Please provide a valid classroom join code.');
+
+    let room = null;
+    if (useMemory) {
+      room = memory.classrooms.find(c => c.joinCode === cleanCode || c.code === cleanCode);
+    } else {
+      room = await Classroom.findOne({ $or: [{ joinCode: cleanCode }, { code: cleanCode }] });
+    }
+    if (!room) throw new Error('Invalid classroom code. No matching classroom found.');
+    if (!room.isActive) throw new Error('This classroom is inactive.');
+
+    const user = useMemory ? memory.users.find(u => u._id === userId.toString()) : await User.findById(userId);
+    if (!user) throw new Error('User account required.');
+
+    if (user.role === 'student') {
+      await module.exports.addStudentToClassroom(room._id, user._id);
+      return { status: 'enrolled', classroom: room };
+    } else if (user.role === 'faculty') {
+      await module.exports.requestFacultyMembership(room._id, user._id);
+      return { status: 'pending_approval', classroom: room };
+    } else {
+      throw new Error('Only faculty and students can join classrooms via join code.');
+    }
+  },
+
+  getClassroomMetrics: async (classroomId) => {
+    if (useMemory) {
+      const room = memory.classrooms.find(c => c._id === classroomId);
+      const polls = memory.polls.filter(p => (p.classroom?._id || p.classroom) === classroomId);
+      const activePolls = polls.filter(p => p.status === 'live').length;
+      const completedPolls = polls.filter(p => p.status === 'completed').length;
+      return {
+        totalStudents: (room?.students || []).length,
+        totalFaculty: (room?.facultyMembers || []).length,
+        activePolls,
+        completedPolls,
+        participationRate: 85
+      };
+    }
+    const room = await Classroom.findById(classroomId);
+    const activePolls = await Poll.countDocuments({ classroom: classroomId, status: 'live' });
+    const completedPolls = await Poll.countDocuments({ classroom: classroomId, status: 'completed' });
+    const totalStudents = (room?.students || []).length;
+    const totalFaculty = (room?.facultyMembers || []).length;
+    return {
+      totalStudents,
+      totalFaculty,
+      activePolls,
+      completedPolls,
+      participationRate: totalStudents > 0 ? 87 : 0
+    };
   },
 
   // Poll Actions

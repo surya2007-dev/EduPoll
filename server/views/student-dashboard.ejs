@@ -1,0 +1,133 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Navigation Shared Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <!-- Main Content Canvas -->
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px]">
+        <div class="max-w-[1200px] mx-auto space-y-8 animate-fade-in">
+            <!-- Header Section -->
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-on-surface">Student Classroom Portal</h1>
+                <p class="text-sm text-on-surface-variant mt-1">Manage your classroom membership and participate in live real-time faculty polls</p>
+            </div>
+
+            <% if (classroom) { %>
+                <!-- Enrolled Classroom Membership Card -->
+                <div class="bg-white rounded-2xl border border-outline-variant/30 p-6 md:p-8 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 bg-primary-fixed text-primary rounded-lg font-mono font-bold text-xs uppercase">
+                                <%= classroom.code %>
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold text-xs uppercase">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Enrolled Member
+                            </span>
+                        </div>
+                        <h2 class="text-2xl font-extrabold text-on-surface">
+                            <%= classroom.name %> — <span class="text-primary"><%= classroom.subject %></span>
+                        </h2>
+                        <p class="text-sm text-on-surface-variant font-medium">
+                            <%= classroom.department %> • Section <%= classroom.section || 'A' %> • <%= classroom.year %> • Semester <%= classroom.semester %>
+                        </p>
+                    </div>
+
+                    <!-- Actions & Live Polling Status -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+                        <div class="bg-surface-container/60 border border-outline-variant/40 rounded-xl px-5 py-3.5 text-center">
+                            <p class="text-[10px] uppercase font-bold text-on-surface-variant/75">Classroom Roster</p>
+                            <p class="text-lg font-extrabold text-on-surface mt-0.5"><%= (classroom.students || []).length %> / <%= classroom.studentCapacity || 63 %></p>
+                        </div>
+
+                        <a href="/student/polls" class="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-white font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-base">podcasts</span> Enter Live Polls (<%= activePollsCount %>)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Classroom Switcher / Join Another Classroom Card -->
+                <div class="bg-surface-container-low/60 rounded-2xl border border-outline-variant/30 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-on-surface text-sm">Need to switch or join another classroom division?</h3>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Enter your section's unique join code provided by your faculty advisor.</p>
+                    </div>
+                    <button onclick="toggleJoinModal(true)" class="px-5 py-2.5 bg-white border border-outline-variant/40 text-on-surface font-bold rounded-xl text-xs hover:border-primary transition-all">
+                        Join Different Classroom
+                    </button>
+                </div>
+            <% } else { %>
+                <!-- Not Enrolled State -->
+                <div class="bg-white rounded-2xl border border-outline-variant/30 p-8 md:p-12 text-center max-w-2xl mx-auto space-y-6 shadow-sm">
+                    <div class="w-16 h-16 rounded-2xl bg-primary-fixed text-primary mx-auto flex items-center justify-center">
+                        <span class="material-symbols-outlined text-3xl">meeting_room</span>
+                    </div>
+                    <div class="space-y-2">
+                        <h2 class="text-2xl font-extrabold text-on-surface">No Classroom Enrolled Yet</h2>
+                        <p class="text-sm text-on-surface-variant max-w-md mx-auto">
+                            To participate in classroom engagement polls, enter your section's Classroom Join Code below.
+                        </p>
+                    </div>
+
+                    <div class="max-w-sm mx-auto space-y-3">
+                        <input type="text" id="mainJoinCodeInput" placeholder="Enter Join Code (e.g. CS101-2026)" class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-center font-mono font-bold uppercase text-base tracking-wider">
+                        <button onclick="joinClassroomDirect()" class="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all text-sm">
+                            Join Classroom
+                        </button>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </main>
+
+    <!-- Modal: Join Classroom via Code -->
+    <div id="joinModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-outline-variant/30">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-on-surface">Join Classroom via Code</h3>
+                <button onclick="toggleJoinModal(false)" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Classroom Join Code</label>
+                <input type="text" id="modalJoinCodeInput" placeholder="e.g. CS101-2026" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm font-mono uppercase">
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="toggleJoinModal(false)" class="px-4 py-2 bg-surface-container text-on-surface rounded-xl font-bold text-sm">Cancel</button>
+                <button onclick="joinFromModal()" class="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:brightness-110">Join Classroom</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function toggleJoinModal(open) {
+        document.getElementById('joinModal').classList.toggle('hidden', !open);
+    }
+
+    async function submitJoin(code) {
+        if (!code) return alert('Please enter a join code');
+        const res = await fetch('/api/classrooms/join', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ joinCode: code })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert('Classroom joined successfully!');
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to join classroom');
+        }
+    }
+
+    function joinClassroomDirect() {
+        submitJoin(document.getElementById('mainJoinCodeInput').value.trim());
+    }
+
+    function joinFromModal() {
+        submitJoin(document.getElementById('modalJoinCodeInput').value.trim());
+    }
+    </script>
+</body>
+</html>

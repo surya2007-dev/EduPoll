@@ -56,6 +56,10 @@ const PollSchema = new mongoose.Schema({
   },
   endsAt: { 
     type: Date 
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, { timestamps: true });
 

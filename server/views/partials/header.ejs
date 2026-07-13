@@ -41,7 +41,7 @@
                         <p class="text-xs text-on-surface-variant">Signed in as</p>
                         <p class="font-bold text-sm text-on-surface truncate"><%= user ? user.name : 'Administrator' %></p>
                     </div>
-                    <a href="/faculty/profile" class="flex items-center gap-2 px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high">
+                    <a href="<%= (user && user.role === 'student') ? '/student/profile' : '/faculty/profile' %>" class="flex items-center gap-2 px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high">
                         <span class="material-symbols-outlined text-sm">person</span> My Profile
                     </a>
                     <a href="/api/auth/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-error hover:bg-error-container/10 border-t border-outline-variant/20 mt-1">

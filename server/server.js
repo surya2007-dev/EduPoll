@@ -246,7 +246,7 @@ app.get('/login', (req, res) => {
   if (req.session.userId) {
     if (req.session.userRole === 'admin') return res.redirect('/admin/dashboard');
     if (req.session.userRole === 'faculty') return res.redirect('/faculty/dashboard');
-    return res.redirect('/student/polls');
+    return res.redirect('/student/dashboard');
   }
   res.render('index');
 });
@@ -448,6 +448,19 @@ app.get('/admin/classrooms', requireLogin, requireRole('admin'), async (req, res
   } catch(e) {
     console.error(e);
     res.status(500).send('Error loading classroom roster.');
+  }
+});
+
+// Render Admin Classroom Detail & Membership Management Page
+app.get('/admin/classrooms/:id', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  try {
+    const classroom = await db.getClassroomById(req.params.id);
+    if (!classroom) return res.status(404).send('Classroom not found');
+    const metrics = await db.getClassroomMetrics(req.params.id);
+    res.render('admin-classroom-manage', { classroom, metrics });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error loading classroom management view.');
   }
 });
 
@@ -824,6 +837,102 @@ app.delete('/api/classrooms/:id', requireLogin, requireRole('faculty'), validate
   }
 });
 
+// Self-service Join Classroom by Code (Students immediately join; Faculty request membership)
+app.post('/api/classrooms/join', requireLogin, async (req, res) => {
+  const { joinCode } = req.body;
+  if (!joinCode || !joinCode.trim()) {
+    return res.status(400).json({ error: 'Join code is required.' });
+  }
+  try {
+    const result = await db.joinClassroomByCode(joinCode.trim(), req.user._id);
+    return res.json({ success: true, result });
+  } catch (err) {
+    console.error('Join Classroom Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to join classroom.' });
+  }
+});
+
+// Update Classroom Details / Capacity Settings
+app.put('/api/classrooms/:id', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  try {
+    const updated = await db.updateClassroom(req.params.id, req.body);
+    return res.json({ success: true, classroom: updated });
+  } catch (err) {
+    console.error('Update Classroom Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to update classroom.' });
+  }
+});
+
+// Admin Add Student to Classroom
+app.post('/api/classrooms/:id/students', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  const { studentId } = req.body;
+  if (!studentId) return res.status(400).json({ error: 'studentId is required.' });
+  try {
+    const room = await db.addStudentToClassroom(req.params.id, studentId);
+    return res.json({ success: true, classroom: room });
+  } catch (err) {
+    console.error('Add Student Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to enroll student.' });
+  }
+});
+
+// Admin Remove Student from Classroom
+app.delete('/api/classrooms/:id/students/:studentId', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  try {
+    await db.removeStudentFromClassroom(req.params.id, req.params.studentId);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Remove Student Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to remove student.' });
+  }
+});
+
+// Admin Assign Faculty to Classroom
+app.post('/api/classrooms/:id/faculty', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  const { facultyId } = req.body;
+  if (!facultyId) return res.status(400).json({ error: 'facultyId is required.' });
+  try {
+    const room = await db.addFacultyToClassroom(req.params.id, facultyId);
+    return res.json({ success: true, classroom: room });
+  } catch (err) {
+    console.error('Add Faculty Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to assign faculty member.' });
+  }
+});
+
+// Admin Remove Faculty from Classroom
+app.delete('/api/classrooms/:id/faculty/:facultyId', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  try {
+    await db.removeFacultyFromClassroom(req.params.id, req.params.facultyId);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Remove Faculty Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to remove faculty member.' });
+  }
+});
+
+// Admin Approve Pending Faculty Request
+app.post('/api/classrooms/:id/faculty/approve/:facultyId', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  try {
+    const room = await db.approveFacultyMembership(req.params.id, req.params.facultyId);
+    return res.json({ success: true, classroom: room });
+  } catch (err) {
+    console.error('Approve Faculty Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to approve faculty request.' });
+  }
+});
+
+// Admin Reject Pending Faculty Request
+app.post('/api/classrooms/:id/faculty/reject/:facultyId', requireLogin, requireRole('admin'), validateIdParam('id'), async (req, res) => {
+  try {
+    await db.rejectFacultyMembership(req.params.id, req.params.facultyId);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Reject Faculty Error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to reject faculty request.' });
+  }
+});
+
 // ==========================================
 // STUDENTS ROUTES & APIS
 // ==========================================
@@ -943,6 +1052,17 @@ app.post('/api/polls', requireLogin, requireRole('faculty'), validatePollCreate,
   }
 
   try {
+    const room = await db.getClassroomById(classroom);
+    if (!room) {
+      return res.status(404).json({ error: 'Classroom not found.' });
+    }
+
+    // Strict authorization check: Verify faculty is an assigned member of this classroom
+    const isFacultyMember = (room.facultyMembers || []).some(f => (f._id || f).toString() === req.user._id.toString());
+    if (!isFacultyMember && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: You are not an assigned faculty member of this classroom.' });
+    }
+
     let resolvedTargets = targetStudents;
 
     // If targeting mentees, auto-resolve from faculty's mentee list
@@ -954,7 +1074,16 @@ app.post('/api/polls', requireLogin, requireRole('faculty'), validatePollCreate,
       }
     }
 
-    const newPoll = await db.createPoll({ type, classroom, question, options, targetStudents: resolvedTargets });
+    // Verify target students belong to this classroom
+    if (resolvedTargets && Array.isArray(resolvedTargets) && resolvedTargets.length > 0) {
+      const roomStudentIds = new Set((room.students || []).map(s => (s._id || s).toString()));
+      const invalidTarget = resolvedTargets.find(id => !roomStudentIds.has(id.toString()));
+      if (invalidTarget) {
+        return res.status(400).json({ error: 'Invalid target: One or more selected students do not belong to this classroom.' });
+      }
+    }
+
+    const newPoll = await db.createPoll({ type, classroom, question, options, targetStudents: resolvedTargets, createdBy: req.user._id });
     return res.json({ success: true, poll: newPoll });
   } catch (err) {
     console.error(err);
@@ -982,6 +1111,26 @@ app.post('/api/polls/:pollId/nudge', requireLogin, requireRole('faculty'), valid
 // ==========================================
 // STUDENT VIEW ROUTES & APIS
 // ==========================================
+
+// Student Classroom & Membership Dashboard
+app.get('/student/dashboard', requireLogin, requireRole('student'), async (req, res) => {
+  try {
+    const classId = req.user.classroom?._id || req.user.classroom;
+    let classroom = null;
+    let activePollsCount = 0;
+    if (classId) {
+      classroom = await db.getClassroomById(classId);
+      if (classroom) {
+        const metrics = await db.getClassroomMetrics(classroom._id);
+        activePollsCount = metrics.activePolls || 0;
+      }
+    }
+    res.render('student-dashboard', { classroom, activePollsCount, user: req.user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error loading student dashboard.');
+  }
+});
 
 app.get('/student/polls', requireLogin, requireRole('student'), async (req, res) => {
   try {

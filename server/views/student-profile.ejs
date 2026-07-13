@@ -42,63 +42,12 @@
 </head>
 <body class="bg-surface font-sans text-on-surface min-h-screen flex flex-col">
 
-    <!-- Header -->
-    <header class="h-16 border-b border-outline-variant/40 bg-surface-container-lowest/80 backdrop-blur-md fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6">
-        <div class="flex items-center gap-3">
-            <a href="/student/polls" class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-2xl">school</span>
-                <span class="font-extrabold text-lg tracking-tight text-on-surface">EduPoll</span>
-                <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold ml-1">Student Portal</span>
-            </a>
-        </div>
-
-        <!-- Student Nav & User Menu -->
-        <div class="flex items-center gap-2">
-            <a href="/student/polls" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
-                <span class="material-symbols-outlined text-xs">poll</span> Polls
-            </a>
-            <a href="/student/mentees" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-tertiary-container/10 transition-all text-xs font-bold text-tertiary rounded-xl">
-                <span class="material-symbols-outlined text-xs">groups</span> Mentorship Group
-            </a>
-            <a href="/student/history" class="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
-                <span class="material-symbols-outlined text-xs">history</span> Poll History
-            </a>
-            <a href="/messages" class="relative flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant hover:bg-primary-container/10 transition-all text-xs font-bold text-primary rounded-xl">
-                <span class="material-symbols-outlined text-xs">chat</span> Messages
-                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
-                <span class="unread-badge-dot absolute -top-1 -right-1 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white animate-pulse" title="Unread messages"></span>
-                <% } %>
-            </a>
-
-            <!-- User Menu Dropdown trigger (ONLY Name + Logo, no SEC ID) -->
-            <div class="relative">
-                <button onclick="toggleStudentUserMenu(event)" class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-surface-container-low border border-transparent hover:border-outline-variant transition-all cursor-pointer">
-                    <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs shadow-sm">
-                        <%= user ? user.name.charAt(0) : 'S' %>
-                    </div>
-                    <span class="text-sm font-semibold text-on-surface"><%= user ? user.name : 'Student' %></span>
-                    <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
-                </button>
-
-                <!-- Dropdown Menu -->
-                <div id="studentUserMenu" class="hidden absolute right-0 mt-2 w-52 bg-white border border-outline-variant/60 rounded-2xl shadow-xl py-2 z-50 animate-fade-in">
-                    <div class="px-4 py-2 border-b border-outline-variant/30 mb-1">
-                        <p class="text-xs font-bold text-on-surface"><%= user ? user.name : 'Student' %></p>
-                        <p class="text-[11px] text-on-surface-variant truncate"><%= user ? user.email : '' %></p>
-                    </div>
-                    <a href="/student/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 transition-all">
-                        <span class="material-symbols-outlined text-base">person</span> My Profile
-                    </a>
-                    <a href="/api/auth/logout" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 transition-all">
-                        <span class="material-symbols-outlined text-base">logout</span> Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Shared Sidebar and Header Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
 
     <!-- Main Content -->
-    <main class="pt-24 pb-20 px-6 max-w-[1000px] mx-auto w-full flex-1">
+    <main class="pt-24 pb-20 px-6 max-w-[1000px] mx-auto w-full flex-1 lg:pl-[280px] transition-all duration-300">
         <div class="space-y-8 animate-fade-in">
             <!-- Page Title -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/40 pb-6">

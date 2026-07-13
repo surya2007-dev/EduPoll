@@ -1,0 +1,430 @@
+<%- include('partials/head') %>
+<body class="bg-background min-h-screen">
+    <!-- Navigation Shared Partials -->
+    <%- include('partials/sidebar') %>
+    <%- include('partials/header') %>
+
+    <!-- Main Content Canvas -->
+    <main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop lg:pl-[280px]">
+        <div class="max-w-[1440px] mx-auto space-y-8 animate-fade-in">
+            <!-- Breadcrumb Navigation -->
+            <div>
+                <a href="/admin/classrooms" class="text-xs font-bold text-primary flex items-center gap-1.5 hover:underline">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span> Back to Classroom Directory
+                </a>
+            </div>
+
+            <!-- Classroom Command Banner -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div class="space-y-2">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="px-3 py-1 bg-primary-fixed text-primary rounded-lg font-mono font-bold text-xs uppercase tracking-wider">
+                            <%= classroom.code %>
+                        </span>
+                        <% if (classroom.isActive) { %>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold text-xs uppercase">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Active Membership
+                            </span>
+                        <% } else { %>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-600 border border-gray-300 rounded-full font-bold text-xs uppercase">
+                                Inactive
+                            </span>
+                        <% } %>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-on-surface leading-tight">
+                        <%= classroom.name %> — <span class="text-primary"><%= classroom.subject %></span>
+                    </h1>
+                    <p class="text-on-surface-variant text-sm font-medium">
+                        <%= classroom.department %> • Section <%= classroom.section || 'A' %> • <%= classroom.year %> • Semester <%= classroom.semester %>
+                    </p>
+                </div>
+
+                <!-- Action Controls & Join Code Card -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+                    <div class="bg-surface-container/60 border border-outline-variant/40 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-on-surface-variant/75">Student & Faculty Join Code</p>
+                            <code class="text-base font-mono font-bold text-primary tracking-wider"><%= classroom.joinCode || classroom.code %></code>
+                        </div>
+                        <button onclick="copyJoinCode('<%= classroom.joinCode || classroom.code %>', this)" class="p-2 bg-white rounded-lg border border-outline-variant/30 text-on-surface-variant hover:text-primary hover:border-primary transition-all shadow-2xs" title="Copy Join Code">
+                            <span class="material-symbols-outlined text-sm">content_copy</span>
+                        </button>
+                    </div>
+
+                    <button onclick="openEditModal()" class="flex items-center justify-center gap-2 px-5 py-3 bg-surface-container text-on-surface font-bold rounded-xl border border-outline-variant/40 hover:bg-surface-container-high transition-all text-sm">
+                        <span class="material-symbols-outlined text-sm">settings</span> Edit Classroom
+                    </button>
+                </div>
+            </div>
+
+            <!-- Capacity & Metrics Bento Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Students Capacity -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-2xl">school</span>
+                        </div>
+                        <span class="text-xs font-bold text-on-surface-variant">Capacity Limit</span>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Enrolled Students</p>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <h3 class="text-3xl font-extrabold text-on-surface"><%= (classroom.students || []).length %></h3>
+                            <span class="text-sm font-bold text-on-surface-variant">/ <%= classroom.studentCapacity || 63 %></span>
+                        </div>
+                        <div class="w-full bg-surface-container rounded-full h-2 mt-3 overflow-hidden">
+                            <div class="bg-primary h-2 rounded-full transition-all" style="width: <%= Math.min(100, Math.round(((classroom.students || []).length / (classroom.studentCapacity || 63)) * 100)) %>%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Faculty Capacity -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center text-secondary">
+                            <span class="material-symbols-outlined text-2xl">supervisor_account</span>
+                        </div>
+                        <span class="text-xs font-bold text-on-surface-variant">Capacity Limit</span>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Assigned Faculty</p>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <h3 class="text-3xl font-extrabold text-on-surface"><%= (classroom.facultyMembers || []).length %></h3>
+                            <span class="text-sm font-bold text-on-surface-variant">/ <%= classroom.facultyCapacity || 10 %></span>
+                        </div>
+                        <div class="w-full bg-surface-container rounded-full h-2 mt-3 overflow-hidden">
+                            <div class="bg-secondary h-2 rounded-full transition-all" style="width: <%= Math.min(100, Math.round(((classroom.facultyMembers || []).length / (classroom.facultyCapacity || 10)) * 100)) %>%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Polls -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+                            <span class="material-symbols-outlined text-2xl">podcasts</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Live Active Polls</p>
+                        <h3 class="text-3xl font-extrabold text-on-surface mt-1"><%= metrics.activePolls || 0 %></h3>
+                        <p class="text-xs text-on-surface-variant mt-2">Real-time polling sessions</p>
+                    </div>
+                </div>
+
+                <!-- Completed Polls -->
+                <div class="bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-2xl">task_alt</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-on-surface-variant font-label-md uppercase tracking-wider">Completed Polls</p>
+                        <h3 class="text-3xl font-extrabold text-on-surface mt-1"><%= metrics.completedPolls || 0 %></h3>
+                        <p class="text-xs text-on-surface-variant mt-2">Archived engagement records</p>
+                    </div>
+                </div>
+            </div>
+
+            <% if (classroom.pendingFacultyRequests && classroom.pendingFacultyRequests.length > 0) { %>
+            <!-- PENDING FACULTY APPROVAL CARD -->
+            <div class="bg-amber-50/70 border-2 border-amber-300 rounded-2xl p-6 space-y-4 shadow-sm animate-pulse-subtle">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-amber-600 text-2xl">pending_actions</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-amber-900">Pending Faculty Membership Requests (<%= classroom.pendingFacultyRequests.length %>)</h3>
+                        <p class="text-xs text-amber-800">Faculty members requested access to deploy polls in this classroom. Review and approve below.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <% classroom.pendingFacultyRequests.forEach(reqObj => { %>
+                        <% const fac = reqObj.faculty; %>
+                        <% if (fac) { %>
+                        <div class="bg-white p-4 rounded-xl border border-amber-200 flex items-center justify-between gap-4 shadow-2xs">
+                            <div>
+                                <p class="font-bold text-on-surface text-sm"><%= fac.name %></p>
+                                <p class="text-xs text-on-surface-variant font-mono">ID: <%= fac.secId || 'FAC' %> • <%= fac.email || 'Faculty' %></p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="approveFaculty('<%= classroom._id %>', '<%= fac._id %>')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-all shadow-2xs">
+                                    Approve
+                                </button>
+                                <button onclick="rejectFaculty('<%= classroom._id %>', '<%= fac._id %>')" class="px-3 py-1.5 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold hover:bg-rose-200 transition-all">
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                        <% } %>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+
+            <!-- Section 1: Assigned Faculty Roster -->
+            <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-outline-variant/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-on-surface">Assigned Faculty Members (<%= (classroom.facultyMembers || []).length %> / <%= classroom.facultyCapacity || 10 %>)</h2>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Authorized to create and monitor live polls in this classroom</p>
+                    </div>
+                    <button onclick="openAddFacultyModal()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs shadow-sm hover:brightness-110 transition-all">
+                        <span class="material-symbols-outlined text-sm">person_add</span> Assign Faculty
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-surface-container-high/30">
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20">Faculty Name</th>
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20">Faculty ID</th>
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20">Department</th>
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                            <% if (!classroom.facultyMembers || classroom.facultyMembers.length === 0) { %>
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-on-surface-variant text-sm italic">
+                                        No assigned faculty members yet. Click "Assign Faculty" or approve pending requests.
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% classroom.facultyMembers.forEach(f => { %>
+                                    <tr class="hover:bg-primary-container/5 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <p class="font-bold text-on-surface text-sm"><%= f.name %></p>
+                                            <p class="text-xs text-on-surface-variant"><%= f.email || '' %></p>
+                                        </td>
+                                        <td class="px-6 py-4 font-mono text-xs font-bold text-primary"><%= f.secId || 'N/A' %></td>
+                                        <td class="px-6 py-4 text-sm text-on-surface-variant"><%= f.department || classroom.department %></td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button onclick="removeFaculty('<%= classroom._id %>', '<%= f._id %>')" class="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold hover:bg-rose-100 transition-all">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section 2: Enrolled Student Roster -->
+            <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-outline-variant/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-on-surface">Enrolled Students (<%= (classroom.students || []).length %> / <%= classroom.studentCapacity || 63 %>)</h2>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Students enrolled in this academic classroom division</p>
+                    </div>
+                    <button onclick="openAddStudentModal()" class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-bold text-xs shadow-sm hover:brightness-110 transition-all">
+                        <span class="material-symbols-outlined text-sm">person_add</span> Enroll Student
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-surface-container-high/30">
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20">Student Name</th>
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20">Student SEC ID</th>
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20">Section / Group</th>
+                                <th class="px-6 py-3.5 font-label-md text-on-surface-variant border-b border-outline-variant/20 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                            <% if (!classroom.students || classroom.students.length === 0) { %>
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-on-surface-variant text-sm italic">
+                                        No enrolled students yet. Students can self-join using code <code class="font-bold text-primary"><%= classroom.joinCode || classroom.code %></code>.
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% classroom.students.forEach(s => { %>
+                                    <tr class="hover:bg-primary-container/5 transition-colors">
+                                        <td class="px-6 py-4 font-semibold text-on-surface text-sm"><%= s.name %></td>
+                                        <td class="px-6 py-4 font-mono text-xs font-bold text-on-surface"><%= s.secId || 'N/A' %></td>
+                                        <td class="px-6 py-4 text-xs text-on-surface-variant"><%= s.section || classroom.section || 'A' %></td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button onclick="removeStudent('<%= classroom._id %>', '<%= s._id %>')" class="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold hover:bg-rose-100 transition-all">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Add Student -->
+    <div id="addStudentModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-outline-variant/30 animate-scale-up">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-on-surface">Enroll Student by ID</h3>
+                <button onclick="closeAddStudentModal()" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Student System ID (_id)</label>
+                <input type="text" id="studentIdInput" placeholder="Paste Student ObjectId" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm font-mono">
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeAddStudentModal()" class="px-4 py-2 bg-surface-container text-on-surface rounded-xl font-bold text-sm">Cancel</button>
+                <button onclick="submitAddStudent('<%= classroom._id %>')" class="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:brightness-110">Enroll Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Faculty -->
+    <div id="addFacultyModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-outline-variant/30 animate-scale-up">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-on-surface">Assign Faculty Member</h3>
+                <button onclick="closeAddFacultyModal()" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Faculty System ID (_id)</label>
+                <input type="text" id="facultyIdInput" placeholder="Paste Faculty ObjectId" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm font-mono">
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeAddFacultyModal()" class="px-4 py-2 bg-surface-container text-on-surface rounded-xl font-bold text-sm">Cancel</button>
+                <button onclick="submitAddFaculty('<%= classroom._id %>')" class="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:brightness-110">Assign Faculty</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Classroom Settings -->
+    <div id="editClassroomModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-outline-variant/30 animate-scale-up">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-on-surface">Edit Classroom Settings</h3>
+                <button onclick="closeEditModal()" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Classroom Name</label>
+                    <input type="text" id="editName" value="<%= classroom.name %>" class="w-full px-3.5 py-2 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Subject</label>
+                    <input type="text" id="editSubject" value="<%= classroom.subject %>" class="w-full px-3.5 py-2 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Department</label>
+                    <input type="text" id="editDepartment" value="<%= classroom.department %>" class="w-full px-3.5 py-2 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Student Capacity</label>
+                    <input type="number" id="editStudentCapacity" value="<%= classroom.studentCapacity || 63 %>" class="w-full px-3.5 py-2 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Faculty Capacity</label>
+                    <input type="number" id="editFacultyCapacity" value="<%= classroom.facultyCapacity || 10 %>" class="w-full px-3.5 py-2 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-3">
+                <button onclick="closeEditModal()" class="px-4 py-2 bg-surface-container text-on-surface rounded-xl font-bold text-sm">Cancel</button>
+                <button onclick="saveClassroomEdit('<%= classroom._id %>')" class="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:brightness-110">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function copyJoinCode(code, btn) {
+        navigator.clipboard.writeText(code).then(() => {
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm text-emerald-600">check</span>';
+            setTimeout(() => btn.innerHTML = oldHtml, 2000);
+        });
+    }
+    function openAddStudentModal() { document.getElementById('addStudentModal').classList.remove('hidden'); }
+    function closeAddStudentModal() { document.getElementById('addStudentModal').classList.add('hidden'); }
+    function openAddFacultyModal() { document.getElementById('addFacultyModal').classList.remove('hidden'); }
+    function closeAddFacultyModal() { document.getElementById('addFacultyModal').classList.add('hidden'); }
+    function openEditModal() { document.getElementById('editClassroomModal').classList.remove('hidden'); }
+    function closeEditModal() { document.getElementById('editClassroomModal').classList.add('hidden'); }
+
+    async function submitAddStudent(classId) {
+        const studentId = document.getElementById('studentIdInput').value.trim();
+        if (!studentId) return alert('Enter a student ID');
+        const res = await fetch(`/api/classrooms/${classId}/students`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId })
+        });
+        const data = await res.json();
+        if (res.ok) location.reload();
+        else alert(data.error || 'Failed to enroll student');
+    }
+
+    async function removeStudent(classId, studentId) {
+        if (!confirm('Remove student from this classroom?')) return;
+        const res = await fetch(`/api/classrooms/${classId}/students/${studentId}`, { method: 'DELETE' });
+        if (res.ok) location.reload();
+        else alert('Failed to remove student');
+    }
+
+    async function submitAddFaculty(classId) {
+        const facultyId = document.getElementById('facultyIdInput').value.trim();
+        if (!facultyId) return alert('Enter a faculty ID');
+        const res = await fetch(`/api/classrooms/${classId}/faculty`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ facultyId })
+        });
+        const data = await res.json();
+        if (res.ok) location.reload();
+        else alert(data.error || 'Failed to assign faculty');
+    }
+
+    async function removeFaculty(classId, facultyId) {
+        if (!confirm('Remove faculty member from this classroom?')) return;
+        const res = await fetch(`/api/classrooms/${classId}/faculty/${facultyId}`, { method: 'DELETE' });
+        if (res.ok) location.reload();
+        else alert('Failed to remove faculty');
+    }
+
+    async function approveFaculty(classId, facultyId) {
+        const res = await fetch(`/api/classrooms/${classId}/faculty/approve/${facultyId}`, { method: 'POST' });
+        if (res.ok) location.reload();
+        else alert('Failed to approve faculty request');
+    }
+
+    async function rejectFaculty(classId, facultyId) {
+        const res = await fetch(`/api/classrooms/${classId}/faculty/reject/${facultyId}`, { method: 'POST' });
+        if (res.ok) location.reload();
+        else alert('Failed to reject faculty request');
+    }
+
+    async function saveClassroomEdit(classId) {
+        const name = document.getElementById('editName').value.trim();
+        const subject = document.getElementById('editSubject').value.trim();
+        const department = document.getElementById('editDepartment').value.trim();
+        const studentCapacity = parseInt(document.getElementById('editStudentCapacity').value, 10);
+        const facultyCapacity = parseInt(document.getElementById('editFacultyCapacity').value, 10);
+
+        const res = await fetch(`/api/classrooms/${classId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, subject, department, studentCapacity, facultyCapacity })
+        });
+        const data = await res.json();
+        if (res.ok) location.reload();
+        else alert(data.error || 'Failed to update classroom');
+    }
+    </script>
+</body>
+</html>

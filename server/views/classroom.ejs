@@ -13,9 +13,14 @@
                     <h3 class="font-headline-lg text-headline-lg text-on-surface">Classrooms Directory</h3>
                     <p class="text-on-surface-variant font-body-md">Manage academic course divisions and track live student enrollments</p>
                 </div>
-                <button onclick="toggleCreateClassroomModal(true)" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all hover:scale-105">
-                    <span class="material-symbols-outlined text-sm">add</span> Create Classroom
-                </button>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <button onclick="toggleJoinModal(true)" class="flex items-center gap-2 px-4 py-2.5 bg-surface-container text-on-surface rounded-xl font-bold border border-outline-variant/40 hover:bg-surface-container-high active:scale-95 transition-all">
+                        <span class="material-symbols-outlined text-sm">key</span> Join via Code
+                    </button>
+                    <button onclick="toggleCreateClassroomModal(true)" class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all hover:scale-105">
+                        <span class="material-symbols-outlined text-sm">add</span> Create Classroom
+                    </button>
+                </div>
             </div>
 
             <!-- Classrooms Grid -->
@@ -25,11 +30,16 @@
                         <span class="material-symbols-outlined text-[48px] text-on-surface-variant/30">school</span>
                         <div>
                             <h5 class="text-lg font-bold text-on-surface">No Classrooms Available</h5>
-                            <p class="text-on-surface-variant text-sm mt-1">Add your first academic classroom to start deploying live polls.</p>
+                            <p class="text-on-surface-variant text-sm mt-1">Add your first academic classroom or join an existing division via join code.</p>
                         </div>
-                        <button onclick="toggleCreateClassroomModal(true)" class="px-5 py-2 bg-primary text-white font-bold rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all text-sm">
-                            Add Classroom
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleJoinModal(true)" class="px-5 py-2 bg-surface-container text-on-surface font-bold rounded-xl shadow-sm text-sm">
+                                Join via Code
+                            </button>
+                            <button onclick="toggleCreateClassroomModal(true)" class="px-5 py-2 bg-primary text-white font-bold rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all text-sm">
+                                Add Classroom
+                            </button>
+                        </div>
                     </div>
                 <% } else { %>
                     <% classrooms.forEach(room => { %>
@@ -48,23 +58,29 @@
                             <div>
                                 <h4 class="font-headline-md text-headline-md font-bold text-on-surface leading-tight"><%= room.name %></h4>
                                 <p class="text-primary font-bold text-sm mt-1 truncate"><%= room.subject %></p>
-                                <p class="text-xs text-on-surface-variant mt-2 font-medium"><%= room.department %> • <%= room.year %> • <%= room.semester %></p>
+                                <p class="text-xs text-on-surface-variant mt-2 font-medium"><%= room.department %> • Section <%= room.section || 'A' %> • <%= room.year %> • <%= room.semester %></p>
                                 <p class="text-xs text-on-surface-variant/75 mt-3 line-clamp-2"><%= room.description || 'No description provided.' %></p>
                             </div>
 
                             <div class="mt-6 pt-4 border-t border-outline-variant/20 flex justify-between items-center">
                                 <div class="space-y-0.5">
-                                    <p class="text-[10px] uppercase font-bold text-on-surface-variant/65">Enrollment Code</p>
+                                    <p class="text-[10px] uppercase font-bold text-on-surface-variant/65">Join Code</p>
                                     <div class="flex items-center gap-1">
-                                        <code class="font-mono text-xs bg-surface-container px-2 py-0.5 border border-outline-variant/10 rounded font-bold text-on-surface"><%= room.code %></code>
-                                        <button onclick="copyToClipboard('<%= room.code %>', this)" class="p-1 text-on-surface-variant hover:text-primary rounded hover:bg-surface-container transition-all relative">
+                                        <code class="font-mono text-xs bg-surface-container px-2 py-0.5 border border-outline-variant/10 rounded font-bold text-primary"><%= room.joinCode || room.code %></code>
+                                        <button onclick="copyToClipboard('<%= room.joinCode || room.code %>', this)" class="p-1 text-on-surface-variant hover:text-primary rounded hover:bg-surface-container transition-all relative">
                                             <span class="material-symbols-outlined text-sm">content_copy</span>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-2xl font-black text-on-surface"><%= room.studentsEnrolledCount %></p>
-                                    <p class="text-[9px] uppercase font-bold text-on-surface-variant">Enrolled Students</p>
+                                <div class="flex items-center gap-4 text-right">
+                                    <div>
+                                        <p class="text-lg font-black text-on-surface"><%= (room.students || []).length %> / <%= room.studentCapacity || 63 %></p>
+                                        <p class="text-[9px] uppercase font-bold text-on-surface-variant">Students</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-lg font-black text-secondary"><%= (room.facultyMembers || []).length %> / <%= room.facultyCapacity || 10 %></p>
+                                        <p class="text-[9px] uppercase font-bold text-on-surface-variant">Faculty</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -280,6 +296,50 @@
                 console.error(e);
             }
         }
+
+        function toggleJoinModal(open) {
+            document.getElementById('joinClassroomModal').classList.toggle('hidden', !open);
+        }
+
+        async function submitJoinClassroom() {
+            const joinCode = document.getElementById('joinCodeInput').value.trim();
+            if (!joinCode) return alert('Please enter a join code');
+            const res = await fetch('/api/classrooms/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ joinCode })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.result?.status === 'PENDING_APPROVAL'
+                    ? 'Membership request submitted! Waiting for Admin approval.'
+                    : 'Classroom joined successfully!');
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to join classroom');
+            }
+        }
     </script>
+
+    <!-- Modal: Join Classroom via Code -->
+    <div id="joinClassroomModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-outline-variant/30">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-on-surface">Join Classroom via Code</h3>
+                <button onclick="toggleJoinModal(false)" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Classroom Join Code</label>
+                <input type="text" id="joinCodeInput" placeholder="e.g. CS101-2026" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:outline-none text-sm font-mono uppercase">
+                <p class="text-xs text-on-surface-variant mt-2">Faculty join requests require Admin approval before poll management privileges are granted.</p>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="toggleJoinModal(false)" class="px-4 py-2 bg-surface-container text-on-surface rounded-xl font-bold text-sm">Cancel</button>
+                <button onclick="submitJoinClassroom()" class="px-5 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:brightness-110">Join Classroom</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
