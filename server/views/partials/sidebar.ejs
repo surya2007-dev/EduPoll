@@ -57,33 +57,66 @@
                 <span class="unread-badge-dot w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white animate-pulse" title="Unread messages"></span>
                 <% } %>
             </a>
-        <% } else { %>
+        <% } else if (user && user.role === 'admin') { %>
             <% 
-              const dashUrl = (user && user.role === 'admin') ? '/admin/dashboard' : '/faculty/dashboard';
-              const classUrl = (user && user.role === 'admin') ? '/admin/classrooms' : '/faculty/classrooms';
-              const studUrl = (user && user.role === 'admin') ? '/admin/students' : '/faculty/students';
-
-              const isDash = (typeof path !== 'undefined' && (path.startsWith('/admin/dashboard') || path.startsWith('/faculty/dashboard')));
-              const isClass = (typeof path !== 'undefined' && (path.startsWith('/admin/classrooms') || path.startsWith('/faculty/classrooms')));
-              const isStud = (typeof path !== 'undefined' && (path.startsWith('/admin/students') || path.startsWith('/faculty/students')));
-              const isMent = (typeof path !== 'undefined' && path.startsWith('/faculty/mentees'));
-              const isPoll = (typeof path !== 'undefined' && path.startsWith('/faculty/polls'));
-              const isRep = (typeof path !== 'undefined' && path.startsWith('/faculty/reports'));
+              const isAdmDash = (typeof path !== 'undefined' && path.startsWith('/admin/dashboard'));
+              const isAdmClass = (typeof path !== 'undefined' && path.startsWith('/admin/classrooms'));
+              const isAdmFac = (typeof path !== 'undefined' && path.startsWith('/admin/faculties'));
+              const isAdmStud = (typeof path !== 'undefined' && path.startsWith('/admin/students'));
               const isMsg = (typeof path !== 'undefined' && path.startsWith('/messages'));
-              const isHelp = (typeof path !== 'undefined' && path.startsWith('/faculty/help'));
             %>
 
-            <a href="<%= dashUrl %>" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isDash ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+            <a href="/admin/dashboard" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isAdmDash ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="text-sm">Dashboard</span>
             </a>
 
-            <a href="<%= classUrl %>" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isClass ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+            <a href="/admin/classrooms" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isAdmClass ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
                 <span class="material-symbols-outlined">school</span>
                 <span class="text-sm">Classrooms</span>
             </a>
 
-            <a href="<%= studUrl %>" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isStud ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+            <a href="/admin/faculties" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isAdmFac ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+                <span class="material-symbols-outlined">supervisor_account</span>
+                <span class="text-sm">Faculties</span>
+            </a>
+
+            <a href="/admin/students" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isAdmStud ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+                <span class="material-symbols-outlined">person</span>
+                <span class="text-sm">Students</span>
+            </a>
+
+            <a href="/messages" class="flex items-center justify-between gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isMsg ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+                <div class="flex items-center gap-3.5">
+                    <span class="material-symbols-outlined">chat</span>
+                    <span class="text-sm">Messages</span>
+                </div>
+                <% if (typeof unreadMessagesCount !== 'undefined' && unreadMessagesCount > 0) { %>
+                <span class="unread-badge-dot w-2.5 h-2.5 bg-error rounded-full ring-2 ring-white animate-pulse" title="Unread messages"></span>
+                <% } %>
+            </a>
+        <% } else { %>
+            <% 
+              const isDash = (typeof path !== 'undefined' && path.startsWith('/faculty/dashboard'));
+              const isClass = (typeof path !== 'undefined' && path.startsWith('/faculty/classrooms'));
+              const isStud = (typeof path !== 'undefined' && path.startsWith('/faculty/students'));
+              const isMent = (typeof path !== 'undefined' && path.startsWith('/faculty/mentees'));
+              const isPoll = (typeof path !== 'undefined' && path.startsWith('/faculty/polls'));
+              const isRep = (typeof path !== 'undefined' && path.startsWith('/faculty/reports'));
+              const isMsg = (typeof path !== 'undefined' && path.startsWith('/messages'));
+            %>
+
+            <a href="/faculty/dashboard" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isDash ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </a>
+
+            <a href="/faculty/classrooms" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isClass ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
+                <span class="material-symbols-outlined">school</span>
+                <span class="text-sm">Classrooms</span>
+            </a>
+
+            <a href="/faculty/students" class="flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 <%= isStud ? 'bg-primary text-white font-bold shadow-md' : 'text-on-surface-variant hover:text-primary hover:bg-primary/5 font-medium' %>">
                 <span class="material-symbols-outlined">person</span>
                 <span class="text-sm">Students</span>
             </a>
