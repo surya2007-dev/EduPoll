@@ -121,6 +121,21 @@ const db = {
         }
       }
     } catch (err) {
+      const diag = {
+        name: err && err.name,
+        message: err && err.message
+      };
+      if (err && err.code !== undefined) diag.code = err.code;
+      if (err && err.codeName !== undefined) diag.codeName = err.codeName;
+      if (err && err.reason) {
+        try {
+          diag.reason = JSON.parse(JSON.stringify(err.reason));
+        } catch (_) {
+          diag.reason = String(err.reason);
+        }
+      }
+      console.error('MongoDB connection diagnostic:', JSON.stringify(diag));
+
       if (isProduction) {
         console.error('CRITICAL: MongoDB connection failed in production mode. Refusing to start with volatile in-memory database fallback.');
         throw new Error('Database connection failed in production mode.');
